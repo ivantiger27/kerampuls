@@ -735,14 +735,16 @@ function casesHtml(){
     ${c.what?`<div class="small">Было: ${esc(c.what)}</div>`:""}<div>${esc(c.did)}</div>
     <div class="row"><span class="small" style="flex:1">${esc(c.nick)}, ${dayLabel(c.ts)} ${clock(c.ts)}</span>${c.uid===user.uid?`<button class="txt" style="color:var(--tx2)" data-act="case_del" data-k="${c.id}">Удалить</button>`:""}</div></div>`; }).join("")}`;
 }
-let aiUrl=null, aiList=[], aiDraft="";
+let aiUrl=null, aiList=[], aiDraft="", aiHist=[], aiHistUnsub=null;
+function subAiHist(){ if(aiHistUnsub) return; aiHistUnsub=onSnapshot(query(collection(db,"aiHistory"),where("uid","==",user.uid)), s=>{ aiHist=s.docs.map(d=>({id:d.id,...d.data(),busy:false,error:""})).sort((a,b)=>b.ts-a.ts).slice(0,50); render(); }); }
 function aiHtml(){
+  if(!aiHistUnsub) setTimeout(subAiHist,0);
   if(aiUrl===null){ aiUrl=""; getDoc(doc(db,"config","app")).then(d=>{ aiUrl=(d.exists()&&d.data().aiUrl)||"-"; render(); }).catch(()=>{ aiUrl="-"; render(); }); }
   const busy=aiList.some(a=>a.busy);
   const top= !aiUrl?`<div class="small">Подключаюсь…</div>`: aiUrl==="-"?`<div class="small" style="color:var(--warn)">ИИ-помощник ещё не подключён: в базе нет адреса сервера (config/app → aiUrl).</div>`:
     `<div class="small">${helpPress?"Пресс "+helpPress+": опишите проблему или номер аварии.":"Выберите пресс выше, так ответ будет точнее."}</div>
     <div class="row"><textarea id="aiq" maxlength="600" placeholder="например: отслоения на 2-м штампе" style="flex:1;min-height:52px">${esc(aiDraft)}</textarea><button class="ok" data-act="ai_send" style="flex:none" ${busy?"disabled":""}>${busy?"…":"Спросить"}</button></div>`;
-  return top+aiList.map(a=>`<div class="al" style="cursor:default"><b>${a.press?"Пресс "+a.press+": ":""}${esc(a.q)}</b>
+  return top+[...aiList,...aiHist].map(a=>`<div class="al" style="cursor:default"><div class="row" style="align-items:flex-start"><b style="flex:1">${a.press?"Пресс "+a.press+": ":""}${esc(a.q)}</b>${a.busy?"":`<button class="txt" style="color:var(--tx2)" data-act="ai_del" data-k="${a.id||""}" data-q="${esc(a.q)}">✕</button>`}</div>${a.ts?`<div class="small">${dayLabel(a.ts)} ${clock(a.ts)}</div>`:""}
     ${a.busy?`<div class="small">Думаю… (до минуты)</div>`:a.error?`<div style="color:var(--warn)">${esc(a.error)}</div>`:
     `<div style="white-space:pre-line;margin-top:4px">${esc(a.answer.replace(/\*\*/g,""))}</div>${a.sources.length?`<div class="small" style="margin-top:6px;white-space:pre-line">Источники:\n${a.sources.map(esc).join("\n")}</div>`:""}`}</div>`).join("");
 }
@@ -757,7 +759,9 @@ async function aiSend(){
     const fixes=fs?fs.docs.map(d=>{const x=d.data(); return {code:x.code||"",press:x.press||0,text:x.text||""};}):[];
     const r=await fetch(aiUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token,q,press:helpPress,cases,fixes})});
     const j=await r.json().catch(()=>null);
-    if(r.ok&&j){ item.answer=j.answer||""; item.sources=(j.sources||[]).map(o=>`${o.id} — ${o.title} (${o.name})`); }
+    if(r.ok&&j){ item.answer=j.answer||""; item.sources=(j.sources||[]).map(o=>`${o.id} — ${o.title} (${o.name})`);
+      aiList=aiList.filter(x=>x!==item);
+      addDoc(collection(db,"aiHistory"),{uid:user.uid,q:item.q,press:item.press,answer:item.answer,sources:item.sources,ts:Date.now()}); render(); return; }
     else item.error=(j&&j.error)||("Ошибка сервера ("+r.status+")");
   }catch(e){ item.error="Нет связи с помощником"; }
   item.busy=false; render();
@@ -906,6 +910,7 @@ document.addEventListener("click", e=>{
   else if(a==="hdef"){ helpDef=el.dataset.k; render(); }
   else if(a==="case_add") dlgCase();
   else if(a==="ai_send") aiSend();
+  else if(a==="ai_del"){ const id=el.dataset.k; if(id) modal("Удалить вопрос из истории?","",()=>{ deleteDoc(doc(db,"aiHistory",id)); },"Удалить"); else { aiList=aiList.filter(x=>x.q!==el.dataset.q||x.busy); render(); } }
   else if(a==="case_del"){ const id=el.dataset.k; modal("Удалить запись?","",()=>{ deleteDoc(doc(db,"cases",id)); },"Удалить"); }
   else if(a==="kb_retry"){ kb=null; kbState=""; render(); }
   else if(a==="al"){ const k=el.dataset.k; helpOpen=helpOpen===k?null:k; subFixes(helpOpen?el.dataset.c:null); render(); }
