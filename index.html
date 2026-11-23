@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="КерамПульс">
+<meta name="theme-color" content="#0f1413">
+<title>КерамПульс</title>
+<style>
+:root{--bg:#0f1413;--card:#1f2927;--card2:#0f1413;--tx:#e0e4e2;--tx2:#9fb0aa;--ok:#5cd6b3;--onok:#00382c;--warn:#f59e0b;--bad:#ef4444;--line:#33413e}
+@media (prefers-color-scheme: light){:root{--bg:#f5f7f7;--card:#e1eae7;--card2:#f5f7f7;--tx:#191c1c;--tx2:#4a5753;--ok:#0b7a62;--onok:#fff;--warn:#b86e00;--line:#b9c7c3}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,system-ui,Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 14px 8px;display:flex;align-items:center;justify-content:space-between;z-index:5}
+header h1{font-size:22px;margin:0}
+.me{background:var(--ok);color:var(--onok);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:700}
+main{padding:0 12px 12px}
+.card{background:var(--card);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.card.stop{border:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 20%,var(--card))}
+.banner{background:color-mix(in srgb,var(--warn) 30%,transparent);color:var(--warn);padding:10px 14px;display:flex;justify-content:space-between;font-weight:800;font-size:19px}
+.in{padding:14px}
+.row{display:flex;gap:8px;align-items:center}
+.sp{flex:1}
+h2{margin:0;font-size:22px}
+.small{font-size:13px;color:var(--tx2)}
+.stats{display:flex;gap:6px;margin:8px 0}
+.stat{flex:1}.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}.stat span{font-size:12px;color:var(--tx2)}
+button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:24px;padding:12px 14px;min-height:48px;flex:1}
+button.ok{background:var(--ok);color:var(--onok);border:0;font-weight:700}
+button.warn{background:var(--warn);color:#2b1b00;border:0;font-weight:700}
+button.big{width:100%;min-height:56px;font-size:18px;font-weight:800;margin-bottom:8px}
+button:disabled{opacity:.5}
+.test{background:var(--card2);border-radius:12px;padding:12px;margin-top:8px}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:6px}.bar i{display:block;height:100%;background:var(--ok)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:6px}
+nav button{border:0;border-radius:16px;min-height:52px;font-size:13px;flex:1}
+nav button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);color:var(--ok);font-weight:700}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px}
+.chips button{flex:none;min-height:40px;padding:8px 14px}.chips button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
+.sys{font-size:12px;color:var(--tx2);padding:3px 2px}
+.lap{border:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:14px;padding:12px;margin:6px 0}
+.lap b{color:var(--ok);font-weight:800}
+.brak{border:1.5px solid var(--bad);background:color-mix(in srgb,var(--bad) 16%,transparent);border-radius:14px;padding:10px;margin:6px 0}
+.brak b.t{color:var(--bad)}
+.day{text-align:center;margin:10px 0 4px}.day span{background:var(--card);border-radius:10px;padding:2px 12px;font-size:12px;color:var(--tx2)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.md{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.md h3{margin:0 0 10px}
+input,select{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--tx);margin:4px 0 10px}
+.login{max-width:420px;margin:12vh auto;padding:0 20px}
+.err{color:var(--bad);margin:6px 0}
+.fm{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.fm button{flex:none;min-height:40px;padding:8px 12px}.fm button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
+.sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;font-size:13px}.sb.on{background:rgba(46,160,67,.15)}.sb.off{background:rgba(230,160,0,.2)}.sb button{padding:6px 12px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, writeBatch, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* ВСТАВЬТЕ СВОИ ДАННЫЕ: Firebase → шестерёнка → Настройки проекта → Ваши приложения → Веб-приложение (</>) */
+const firebaseConfig = {
+  apiKey: "AIzaSyD6BkylVnAh3gWQmARZEHj8o9YSK4J8lOo",
+  authDomain: "kerampuls.firebaseapp.com",
+  projectId: "kerampuls",
+  appId: "1:718382916991:web:c4255adef4d0ecb0dee64a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const DRYERS = [
+  {name:"Ева 1", id:"eva1", shelves:252, lap:84, line:1},
+  {name:"Ева 2", id:"eva2", shelves:252, lap:114.28, line:2},
+  {name:"Ева 3", id:"eva3", shelves:252, lap:84, line:3},
+  {name:"Ева 4", id:"eva4", shelves:324, lap:99.5, line:4}
+];
+const FORMATS = {"300x300":15, "600x600":4, "1200x600":2};
+const ROLES = {press:"Прессовщик", glaze:"Оператор глазури", lab:"Лаборант", master:"Мастер смены", chief:"Начальник смены", viewer:"Наблюдатель"};
+
+/* ---------- расчёт (как в приложении) ---------- */
+const mod = (a,n)=>((a%n)+n)%n;
+const evaDef = d=>({synced:false, refPos:0, refTime:0, running:true, rate:d.shelves/d.lap, fmt:"", tpm:0});
+const pos = (e,now)=> (!e.synced||!e.running) ? e.refPos : e.refPos + (now-e.refTime)/60000*e.rate;
+const shelfNow = (e,now,n)=> mod(Math.floor(pos(e,now)),n)+1;
+const leftSh = (t,e,now)=> Math.max(0, t.target-pos(e,now));
+const remSec = (t,e,now)=> e.rate>0 ? leftSh(t,e,now)/e.rate*60 : 1e9;
+function evaSynced(e,c,n,now){
+  let np;
+  if(!e.synced) np=c-1;
+  else { const p=pos(e,now); let diff=(c-1)-mod(p,n); if(diff>n/2) diff-=n; else if(diff<-n/2) diff+=n; np=p+diff; }
+  return {...e, synced:true, refPos:np, refTime:now};
+}
+function retarget(t,old,fresh,c,n,now){
+  const arrived = old.synced && (t.target-pos(old,now))<=0.5;
+  if(arrived) return {...t, target:fresh.refPos};
+  let l = mod(t.testShelf-c,n); if(l===0) l=n;
+  return {...t, target:fresh.refPos+l};
+}
+const toggled = (e,now)=> e.running ? {...e, refPos:pos(e,now), refTime:now, running:false} : {...e, refTime:now, running:true};
+const rated = (e,rate,fmt,tpm,now)=>({...e, refPos:pos(e,now), refTime:now, rate, fmt, tpm});
+
+/* ---------- форматирование ---------- */
+const pad3 = n=>String(n).padStart(3,"0");
+const pad2 = n=>String(n).padStart(2,"0");
+const clock = ms=>{const d=new Date(ms); return pad2(d.getHours())+":"+pad2(d.getMinutes());};
+const fmtDur = sec=>{const t=Math.max(0,Math.ceil(sec)); const h=Math.floor(t/3600), m=Math.floor((t%3600)/60); return h>0? h+" ч "+m+" мин" : m+" мин";};
+const mmss = sec=>{const t=Math.max(0,Math.floor(sec)); return pad2(Math.floor(t/60))+":"+pad2(t%60);};
+const fmtStop = sec=>{const t=Math.max(0,Math.floor(sec)); return t>=60 ? Math.floor(t/60)+" мин "+(t%60)+" с" : t+" с";};
+const rateTxt = r=>r.toFixed(2).replace(".",",");
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dayKey = ts=>{const d=new Date(ts); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();};
+const dayLabel = ts=>{ if(dayKey(ts)===dayKey(Date.now())) return "Сегодня"; if(dayKey(ts)===dayKey(Date.now()-864e5)) return "Вчера"; return new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}); };
+const fmtLabel = f=>f.replace("x","×");
+
+/* ---------- состояние ---------- */
+let user=null, role="viewer", nick="", tab="dry", jfilter="all";
+let evas={}, tests=[], journal=[], accepts={}, unsubs=[];
+const root = document.getElementById("root");
+const evaOf = d=> evas[d.id] || evaDef(d);
+
+/* ---------- вход ---------- */
+function renderLogin(err=""){
+  root.innerHTML = `<div class="login"><h1>КерамПульс</h1><p class="small">Вход для сотрудников</p>
+  <input id="lg" placeholder="Логин" autocapitalize="off" autocomplete="username">
+  <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password">
+  <div class="err">${esc(err)}</div><button class="ok big" id="go">Войти</button></div>`;
+  document.getElementById("go").onclick = async ()=>{
+    const l=document.getElementById("lg").value.trim().toLowerCase(), p=document.getElementById("pw").value;
+    try{ await signInWithEmailAndPassword(auth, l+"@keram.app", p); }
+    catch(e){ renderLogin(e.code==="auth/network-request-failed" ? "Нет связи с сервером" : "Неверный логин или пароль"); }
+  };
+}
+function roleOf(email){ const l=(email||"").split("@")[0]; for(const r of ["chief","master","press","glaze","lab"]) if(l.startsWith(r)) return r; return "viewer"; }
+
+onAuthStateChanged(auth, u=>{
+  unsubs.forEach(f=>f()); unsubs=[];
+  user=u;
+  if(!u){ renderLogin(); return; }
+  role=roleOf(u.email);
+  unsubs.push(onSnapshot(doc(db,"profiles",u.uid), s=>{
+    nick = s.exists() ? (s.data().nick||"") : "";
+    if(!nick) renderNick(); else { startData(); }
+  }));
+});
+function renderNick(){
+  root.innerHTML = `<div class="login"><h2>Как вас подписывать?</h2><p class="small">Имя или ник, без фамилии.</p>
+  <input id="nk" maxlength="20" placeholder="Имя или ник"><button class="ok big" id="go">Продолжить</button></div>`;
+  document.getElementById("go").onclick = ()=>{ const v=document.getElementById("nk").value.trim(); if(v) setDoc(doc(db,"profiles",user.uid),{nick:v},{merge:true}); };
+}
+let dataStarted=false;
+function startData(){
+  if(dataStarted){ render(); return; }
+  dataStarted=true;
+  unsubs.push(onSnapshot(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd) evas[d.id]={synced:!!x.synced, refPos:+x.refPos||0, refTime:+x.refTime||0, running:x.running!==false, rate:(+x.rate>0.05?+x.rate:dd.shelves/dd.lap), fmt:x.fmt||"", tpm:+x.tpm||0}; }); render(); }));
+  unsubs.push(onSnapshot(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:+x.target, author:x.author||""}); }); render(); }));
+  unsubs.push(onSnapshot(query(collection(db,"chats","journal","messages"),orderBy("ts","desc"),limit(80)), s=>{ journal=s.docs.map(d=>({id:d.id,...d.data()})); render(); }));
+  unsubs.push(onSnapshot(query(collection(db,"accepts"),orderBy("ts","desc"),limit(100)), s=>{ accepts={}; s.forEach(d=>{ const x=d.data(); (accepts[x.msg] ||= []).push(x); }); render(); }));
+}
+
+/* ---------- запись ---------- */
+const jcol = ()=>collection(db,"chats","journal","messages");
+const log = (text,type="sys",tag="")=> addDoc(jcol(), {uid:user.uid, author:nick, text, ts:Date.now(), type, tag, role});
+const evaMap = e=>({synced:e.synced, refPos:e.refPos, refTime:e.refTime, running:e.running, rate:e.rate, fmt:e.fmt, tpm:e.tpm});
+const testMap = t=>({id:t.id, dryer:t.dryer, design:t.design, testShelf:t.testShelf, target:t.target, author:t.author});
+
+function doFix(d,c){
+  const now=Date.now(), old=evaOf(d), ne=evaSynced(old,c,d.shelves,now), b=writeBatch(db);
+  b.set(doc(db,"evas",d.id), evaMap(ne));
+  tests.filter(t=>t.dryer===d.name).forEach(t=>b.set(doc(db,"tests",String(t.id)), testMap(retarget(t,old,ne,c,d.shelves,now))));
+  b.commit(); log(`${d.name}: полка исправлена на ${pad3(c)} — ${nick}`);
+}
+function doToggle(d){
+  const now=Date.now(), old=evaOf(d), ne=toggled(old,now);
+  setDoc(doc(db,"evas",d.id), evaMap(ne));
+  log(ne.running ? `${d.name}: линия пошла, простой ${fmtStop((now-old.refTime)/1000)} — ${nick}` : `${d.name}: ЛИНИЯ СТОИТ — ${nick}`);
+}
+function doSpeed(d,rate,fmt,tpm){
+  const now=Date.now(); setDoc(doc(db,"evas",d.id), evaMap(rated(evaOf(d),rate,fmt,tpm,now)));
+  log(`${d.name}: скорость ${rateTxt(rate)} полок в минуту, круг ${fmtDur(d.shelves/rate*60)}${fmt?", формат "+fmtLabel(fmt):""} — ${nick}`);
+}
+function doAdd(d,name,shelf){
+  const now=Date.now(), old=evaOf(d), ne=evaSynced(old,shelf,d.shelves,now), b=writeBatch(db);
+  b.set(doc(db,"evas",d.id), evaMap(ne));
+  tests.filter(t=>t.dryer===d.name).forEach(t=>b.set(doc(db,"tests",String(t.id)), testMap(retarget(t,old,ne,shelf,d.shelves,now))));
+  const nt={id:now, dryer:d.name, design:name, testShelf:shelf, target:ne.refPos+d.shelves, author:nick};
+  b.set(doc(db,"tests",String(nt.id)), testMap(nt)); b.commit();
+  log(`${d.name}: поставлен тест «${name}», полка ${pad3(shelf)} — ${nick}`);
+}
+function doDone(t){
+  const now=Date.now(), b=writeBatch(db);
+  b.delete(doc(db,"tests",String(t.id)));
+  b.set(doc(db,"history",String(t.id)), {...testMap(t), doneAt:now, doneBy:nick});
+  b.commit();
+  log(`Тест «${t.design}» вышел с ${t.dryer} в ${clock(now)}, полка ${pad3(t.testShelf)}, в пути ${fmtStop((now-t.id)/1000)}`, "lap", "Круг пройден");
+}
+function doAccept(m){ setDoc(doc(db,"accepts",m.id+"_"+role), {msg:m.id, role, uid:user.uid, nick, ts:Date.now()}); }
+
+/* ---------- окна ---------- */
+function modal(title, html, onOk, okText="Сохранить"){
+  const ov=document.createElement("div"); ov.className="ov";
+  ov.innerHTML=`<div class="md"><h3>${title}</h3>${html}<div class="row"><button id="mc">Отмена</button>${onOk?`<button class="ok" id="mo">${okText}</button>`:""}</div></div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.querySelector("#mc").onclick=close;
+  ov.onclick=e=>{ if(e.target===ov) close(); };
+  if(onOk) ov.querySelector("#mo").onclick=()=>{ if(onOk(ov)!==false) close(); };
+  return ov;
+}
+function dlgFix(d){
+  modal(`${d.name}: какая полка сейчас на загрузке?`, `<input id="v" type="number" inputmode="numeric" placeholder="1–${d.shelves}">`, ov=>{
+    const c=parseInt(ov.querySelector("#v").value,10); if(!(c>=1&&c<=d.shelves)) return false; doFix(d,c);
+  }, "Пересчитать");
+}
+function dlgAdd(){
+  modal("Новый тест", `<select id="d">${DRYERS.map(d=>`<option value="${d.id}">${d.name}</option>`).join("")}</select>
+  <input id="n" placeholder="Название теста (например: дизайн 001, брак)"><input id="s" type="number" inputmode="numeric" placeholder="Полка, которая сейчас на загрузке">`, ov=>{
+    const d=DRYERS.find(x=>x.id===ov.querySelector("#d").value), n=ov.querySelector("#n").value.trim(), s=parseInt(ov.querySelector("#s").value,10);
+    if(!n||!(s>=1&&s<=d.shelves)) return false; doAdd(d,n,s);
+  }, "Поставить");
+}
+function dlgSpeed(d){
+  const e=evaOf(d); let fmt=e.fmt, byLap=e.tpm<=0;
+  const ov=modal(`${d.name}: скорость`, `<div class="small">Формат плитки</div><div class="fm" id="fm">
+  <button data-f="">не задан</button>${Object.keys(FORMATS).map(f=>`<button data-f="${f}">${fmtLabel(f)} · ${FORMATS[f]} на полке</button>`).join("")}</div>
+  <input id="tpm" inputmode="decimal" placeholder="Плиток в минуту (как на Еве)" value="${e.tpm>0?e.tpm:""}">
+  <input id="lap" inputmode="decimal" placeholder="или круг в минутах" value="${+(d.shelves/e.rate).toFixed(2)}"><div id="pv" class="small"></div>`, o=>{
+    const r=calc(); if(!r) return false; doSpeed(d,r,fmt,byLap?0:(parseFloat(o.querySelector("#tpm").value.replace(",","."))||0));
+  });
+  const calc=()=>{
+    const tpm=parseFloat(ov.querySelector("#tpm").value.replace(",",".")), lap=parseFloat(ov.querySelector("#lap").value.replace(",","."));
+    const tps=FORMATS[fmt]||0; let r=null;
+    if(byLap){ if(lap>0) r=d.shelves/lap; } else if(tpm>0&&tps>0) r=tpm/tps;
+    const pv=ov.querySelector("#pv");
+    if(r&&r>=0.3&&r<=20){ const lp=d.shelves/r; pv.innerHTML=`Скорость: ${rateTxt(r)} полок в минуту, круг ${fmtDur(lp*60)}`+((lp>d.lap*1.4||lp<d.lap*0.6)?`<br><b style="color:var(--warn)">Внимание: круг сильно отличается от обычного (${fmtDur(d.lap*60)}). Проверьте формат и плиток в минуту.</b>`:""); return r; }
+    pv.textContent="Выберите формат и введите плиток в минуту, либо время круга"; return null;
+  };
+  const paint=()=>ov.querySelectorAll("#fm button").forEach(b=>b.classList.toggle("on",b.dataset.f===fmt));
+  ov.querySelectorAll("#fm button").forEach(b=>b.onclick=()=>{ fmt=b.dataset.f; byLap=!fmt; paint(); calc(); });
+  ov.querySelector("#tpm").oninput=()=>{ byLap=false; calc(); };
+  ov.querySelector("#lap").oninput=()=>{ byLap=true; calc(); };
+  paint(); calc();
+}
+
+/* ---------- экраны ---------- */
+function evaCard(d){
+  const e=evaOf(d), now=Date.now(), stopped=!e.running, can=role==="press"&&onShift(), ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,e,now)-remSec(b,e,now));
+  const tr = ts.map(t=>{
+    const rem=remSec(t,e,now), arr=leftSh(t,e,now)<=0.5, col=(stopped||rem<900)?"var(--warn)":"var(--ok)", pr=Math.min(100,Math.max(0,(1-leftSh(t,e,now)/d.shelves)*100));
+    return `<div class="test"><div class="bar"><i style="width:${pr}%;background:${arr?"var(--ok)":col}"></i></div><b style="font-size:18px">${esc(t.design)}</b>
+    ${arr?`<div style="color:var(--ok);font-weight:700;font-size:18px">Полка с тестом на месте!</div>`:`<div class="stats"><div class="stat"><span>Остановка</span><b style="color:${col}">${stopped?"—":clock(now+rem*1000)}</b></div><div class="stat"><span>Осталось</span><b style="color:${col}">${fmtDur(rem)}</b></div><div class="stat"><span>Полка</span><b>${pad3(t.testShelf)}</b></div></div><div class="small">ещё ${Math.ceil(leftSh(t,e,now))} полок</div>`}
+    ${t.author?`<div class="small">Поставил: ${esc(t.author)}</div>`:""}
+    ${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Круг прошёл</button>`:""}</div>`;
+  }).join("");
+  return `<div class="card ${stopped?"stop":""}">${stopped?`<div class="banner"><span>⏸ ЛИНИЯ СТОИТ</span><span data-stop="${d.id}">простой ${mmss((now-e.refTime)/1000)}</span></div>`:""}
+  <div class="in"><div class="row"><h2>${d.name}</h2><span class="small">→ глазурь ${d.line}</span><span class="sp"></span>${e.fmt?`<span class="small">${fmtLabel(e.fmt)}</span>`:""}</div>
+  <div class="stats"><div class="stat"><span>На загрузке</span><b>${e.synced?pad3(shelfNow(e,now,d.shelves)):"—"}</b></div><div class="stat"><span>Скорость</span><b>${rateTxt(e.rate)} пол/мин</b></div><div class="stat"><span>Круг</span><b>${fmtDur(d.shelves/e.rate*60)}</b></div></div>
+  ${e.synced?"":`<div class="small">Положение полок неизвестно: поставьте тест или нажмите «Поправить полку»</div>`}
+  ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
+  <div class="row" style="margin-top:8px"><button data-act="fix" data-d="${d.id}">Поправить полку</button>${stopped?"":`<button class="warn" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}</div>
+  <button style="width:100%;margin-top:8px" data-act="speed" data-d="${d.id}">⚙ Скорость и формат плитки</button>`:""}
+  <div style="margin-top:8px">${ts.length?tr:`<div class="small">Тестов на этой Еве нет</div>`}</div></div></div>`;
+}
+function journalHtml(){
+  const f=jfilter, list=journal.filter(m=>f==="all"||(f==="brak"&&m.type==="brak")||(f==="lap"&&m.type==="lap")||(f==="stop"&&m.type==="sys"&&/СТОИТ|пошла/.test(m.text||"")));
+  let out="", last=null;
+  for(const m of list){
+    const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
+    if(m.type==="lap") out+=`<div class="lap"><b>✅ КРУГ ПРОЙДЕН</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+    else if(m.type==="brak"){
+      const acc=accepts[m.id]||[], to=m.to||[], mine=to.includes(role)&&!acc.some(a=>a.role===role);
+      out+=`<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.text?`<div>${esc(m.text)}</div>`:""}
+      ${to.length?`<div class="small">Кому: ${to.map(r=>ROLES[r]||r).join(", ")}</div>`+to.map(r=>{const a=acc.find(x=>x.role===r); return a?`<div style="color:var(--ok);font-weight:700;font-size:13px">✓ ${ROLES[r]}: принял ${esc(a.nick)}, ${clock(a.ts)}</div>`:`<div style="color:var(--warn);font-size:13px">⏳ ${ROLES[r]}: ещё не принял</div>`;}).join(""):""}
+      ${mine?`<button class="ok" style="width:100%;margin-top:8px" data-act="accept" data-m="${m.id}">Принял информацию</button>`:""}
+      <div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+    } else out+=`<div class="sys">${clock(m.ts)} · ${esc(m.text)}</div>`;
+  }
+  return `<div class="chips">${[["all","Всё"],["brak","Брак"],["lap","Круги"],["stop","Остановки"]].map(([k,t])=>`<button class="${f===k?"on":""}" data-act="jf" data-k="${k}">${t}</button>`).join("")}</div>${out||`<div class="small">Записей нет</div>`}`;
+}
+/* ---------- смены (день 08–20, ночь 20–08, Екатеринбург UTC+5) ---------- */
+const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000;
+const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } };
+const lead=()=>role==="master"||role==="chief";
+const shiftTs=()=>+ls("shift_"+user.uid)||0;
+const onShift=()=>lead()||(shiftTs()>0&&Date.now()-shiftTs()<MAXSH);
+const brigade=()=>+ls("brigade")||0;
+function sched(){
+  const b=brigade(); if(!b) return null;
+  const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), day0=Math.floor(t.getTime()/86400000);
+  const isDay=h>=8&&h<20, sd=h<8?day0-1:day0, idx=((sd-ANCHOR+1-(b-1))%4+4)%4, mine=isDay?idx===0:idx===1;
+  return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+1-(b-1))%4+4)%4],mine:false};
+}
+function shiftBar(){
+  if(lead()) return "";
+  const s=sched();
+  if(onShift()) return `<div class="sb on">🟢 На смене с ${new Date(shiftTs()).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}${brigade()?" · бригада "+brigade():""}<button data-act="handover">Сдать смену</button></div>`;
+  const hint=!s?"Укажите бригаду (кружок вверху справа)":s.mine?"По графику сейчас ваша смена: "+s.n:"Сегодня по графику: "+s.n;
+  return `<div class="sb off"><div><b>Вы не на смене</b><div class="small">${hint}</div></div><button class="ok" data-act="accept_shift">Принять смену</button></div>`;
+}
+function render(){
+  if(!user||!nick) return;
+  const initials=nick.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?";
+  root.innerHTML=`<header><h1>КерамПульс</h1><div class="me" data-act="menu">${esc(initials)}</div></header>${shiftBar()}
+  <main>${tab==="dry"?DRYERS.map(evaCard).join("")+(role==="press"&&onShift()?`<button class="ok big" data-act="add">+ Тест</button>`:""):journalHtml()}</main>
+  <nav><button class="${tab==="dry"?"on":""}" data-act="tab" data-k="dry">🔥<br>Сушилки</button><button class="${tab==="jr"?"on":""}" data-act="tab" data-k="jr">📋<br>Журнал</button></nav>`;
+}
+document.addEventListener("click", e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  const a=el.dataset.act, d=DRYERS.find(x=>x.id===el.dataset.d);
+  if(a==="tab"){ tab=el.dataset.k; render(); }
+  else if(a==="jf"){ jfilter=el.dataset.k; render(); }
+  else if(a==="fix") dlgFix(d);
+  else if(a==="toggle") doToggle(d);
+  else if(a==="speed") dlgSpeed(d);
+  else if(a==="add") dlgAdd();
+  else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) modal("Убрать тест?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>`, ()=>doDone(t), "Да, круг прошёл"); }
+  else if(a==="brig"){ ls("brigade",el.dataset.b); document.querySelector(".ov")?.remove(); render(); }
+  else if(a==="accept"){ const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
+  else if(a==="accept_shift"){ ls("shift_"+user.uid,Date.now()); const s=sched(); log(nick+" принял смену"+(s&&s.mine?" ("+s.n+")":"")); render(); }
+  else if(a==="handover"){ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); }
+  else if(a==="menu") modal(`${esc(nick)}<div class="small">${ROLES[role]}</div>`, `${lead()?"":`<div class="small">Бригада</div><div style="display:flex;gap:8px;margin:6px 0 12px">${[1,2,3,4].map(b=>`<button data-act="brig" data-b="${b}" class="${brigade()===b?"ok":""}" style="flex:1">${b}</button>`).join("")}</div>`}<button style="width:100%" id="so">Выйти</button>`, null).querySelector("#so").onclick=()=>{ signOut(auth); document.querySelector(".ov")?.remove(); };
+});
+setInterval(()=>{ if(user&&nick&&!document.querySelector(".ov")) render(); },10000);
+setInterval(()=>{ document.querySelectorAll("[data-stop]").forEach(el=>{ const d=DRYERS.find(x=>x.id===el.dataset.stop); if(d) el.textContent="простой "+mmss((Date.now()-evaOf(d).refTime)/1000); }); },1000);
+</script>
+</body>
+</html>
