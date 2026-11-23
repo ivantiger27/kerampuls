@@ -52,7 +52,7 @@ input,select{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px 
 .login{max-width:420px;margin:12vh auto;padding:0 20px}
 .err{color:var(--bad);margin:6px 0}
 .fm{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.fm button{flex:none;min-height:40px;padding:8px 12px}.fm button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
-.sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;font-size:13px}.sb.on{background:rgba(46,160,67,.15)}.sb.off{background:rgba(230,160,0,.2)}.sb button{padding:6px 12px}
+.sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;font-size:13px}.sb.on{background:rgba(46,160,67,.15)}.sb.off{background:rgba(230,160,0,.2)}.sb button{padding:6px 12px;width:auto;flex:none}
 </style>
 </head>
 <body>
@@ -197,7 +197,7 @@ function doDone(t){
   b.delete(doc(db,"tests",String(t.id)));
   b.set(doc(db,"history",String(t.id)), {...testMap(t), doneAt:now, doneBy:nick});
   b.commit();
-  log(`Тест «${t.design}» вышел с ${t.dryer} в ${clock(now)}, полка ${pad3(t.testShelf)}, в пути ${fmtStop((now-t.id)/1000)}`, "lap", "Круг пройден");
+  log(`Круг прошёл: тест «${t.design}», ${t.dryer}, полка ${pad3(t.testShelf)} на выходе в ${clock(now)} (в пути ${fmtStop((now-t.id)/1000)}). На глазурь выйдет после сброса накопителя`, "lap", "Круг пройден");
 }
 function doAccept(m){ setDoc(doc(db,"accepts",m.id+"_"+role), {msg:m.id, role, uid:user.uid, nick, ts:Date.now()}); }
 
@@ -271,7 +271,7 @@ function journalHtml(){
   let out="", last=null;
   for(const m of list){
     const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
-    if(m.type==="lap") out+=`<div class="lap"><b>✅ КРУГ ПРОЙДЕН</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+    if(m.type==="lap") out+=`<div class="lap"><b>🔄 КРУГ ПРОШЁЛ</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
     else if(m.type==="brak"){
       const acc=accepts[m.id]||[], to=m.to||[], mine=to.includes(role)&&!acc.some(a=>a.role===role);
       out+=`<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.text?`<div>${esc(m.text)}</div>`:""}
@@ -298,8 +298,8 @@ function sched(){
 function shiftBar(){
   if(lead()) return "";
   const s=sched();
-  if(onShift()) return `<div class="sb on">🟢 На смене с ${new Date(shiftTs()).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}${brigade()?" · бригада "+brigade():""}<button data-act="handover">Сдать смену</button></div>`;
-  const hint=!s?"Укажите бригаду (кружок вверху справа)":s.mine?"По графику сейчас ваша смена: "+s.n:"Сегодня по графику: "+s.n;
+  if(onShift()) return `<div class="sb on">🟢 На смене с ${new Date(shiftTs()).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}${brigade()?" · смена "+brigade():""}<button data-act="handover">Сдать смену</button></div>`;
+  const hint=!s?"Укажите свою смену (1–4) (кружок вверху справа)":s.mine?"По графику сейчас ваша смена: "+s.n:"Сегодня по графику: "+s.n;
   return `<div class="sb off"><div><b>Вы не на смене</b><div class="small">${hint}</div></div><button class="ok" data-act="accept_shift">Принять смену</button></div>`;
 }
 function render(){
@@ -323,7 +323,7 @@ document.addEventListener("click", e=>{
   else if(a==="accept"){ const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
   else if(a==="accept_shift"){ ls("shift_"+user.uid,Date.now()); const s=sched(); log(nick+" принял смену"+(s&&s.mine?" ("+s.n+")":"")); render(); }
   else if(a==="handover"){ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); }
-  else if(a==="menu") modal(`${esc(nick)}<div class="small">${ROLES[role]}</div>`, `${lead()?"":`<div class="small">Бригада</div><div style="display:flex;gap:8px;margin:6px 0 12px">${[1,2,3,4].map(b=>`<button data-act="brig" data-b="${b}" class="${brigade()===b?"ok":""}" style="flex:1">${b}</button>`).join("")}</div>`}<button style="width:100%" id="so">Выйти</button>`, null).querySelector("#so").onclick=()=>{ signOut(auth); document.querySelector(".ov")?.remove(); };
+  else if(a==="menu") modal(`${esc(nick)}<div class="small">${ROLES[role]}</div>`, `${lead()?"":`<div class="small">Моя смена (1–4)</div><div style="display:flex;gap:8px;margin:6px 0 12px">${[1,2,3,4].map(b=>`<button data-act="brig" data-b="${b}" class="${brigade()===b?"ok":""}" style="flex:1">${b}</button>`).join("")}</div>`}<button style="width:100%" id="so">Выйти</button>`, null).querySelector("#so").onclick=()=>{ signOut(auth); document.querySelector(".ov")?.remove(); };
 });
 setInterval(()=>{ if(user&&nick&&!document.querySelector(".ov")) render(); },10000);
 setInterval(()=>{ document.querySelectorAll("[data-stop]").forEach(el=>{ const d=DRYERS.find(x=>x.id===el.dataset.stop); if(d) el.textContent="простой "+mmss((Date.now()-evaOf(d).refTime)/1000); }); },1000);
