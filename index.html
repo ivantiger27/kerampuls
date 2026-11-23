@@ -17,7 +17,7 @@ header{position:sticky;top:0;background:var(--bg);padding:calc(10px + env(safe-a
 header h1{font-size:22px;margin:0}
 .me{background:var(--ok);color:var(--onok);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:700}
 main{padding:0 12px 12px}
-.card{background:var(--card);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.card{background:var(--card);border-radius:16px;margin-bottom:10px;overflow:hidden}.card .in{padding:10px 12px!important}
 .card.stop{border:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 20%,var(--card))}
 .banner{background:color-mix(in srgb,var(--warn) 30%,transparent);color:var(--warn);padding:10px 14px;display:flex;justify-content:space-between;font-weight:800;font-size:19px}
 .in{padding:14px}
@@ -26,11 +26,11 @@ main{padding:0 12px 12px}
 h2{margin:0;font-size:22px}
 .small{font-size:13px;color:var(--tx2)}
 .stats{display:flex;gap:6px;margin:8px 0}
-.stat{flex:1}.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}.stat span{font-size:12px;color:var(--tx2)}
-button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:24px;padding:12px 14px;min-height:48px;flex:1}
+.stat{flex:1}.stat b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.stat span{font-size:12px;color:var(--tx2)}
+button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:24px;padding:8px 12px;min-height:44px;flex:1}
 button.ok{background:var(--ok);color:var(--onok);border:0;font-weight:700}
 button.warn{background:var(--warn);color:#2b1b00;border:0;font-weight:700}
-button.big{width:100%;min-height:56px;font-size:18px;font-weight:800;margin-bottom:8px}
+button.big{width:100%;min-height:48px;font-size:16px;font-weight:800;margin-bottom:8px}
 button:disabled{opacity:.5}
 .test{background:var(--card2);border-radius:12px;padding:12px;margin-top:8px}
 .bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:6px}.bar i{display:block;height:100%;background:var(--ok)}
@@ -53,6 +53,7 @@ input,select{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px 
 .err{color:var(--bad);margin:6px 0}
 .fm{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.fm button{flex:none;min-height:40px;padding:8px 12px}.fm button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
 .sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;font-size:13px}.sb.on{background:rgba(46,160,67,.15)}.sb.off{background:rgba(230,160,0,.2)}.sb button{padding:6px 12px;width:auto;flex:none}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}.chips button{flex:none;min-height:38px;padding:6px 12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%}.card.slim{display:flex;align-items:center;gap:8px;padding:2px 12px;opacity:.7}.card.slim button{flex:none;min-height:36px;padding:4px 10px}.sch{position:relative}.sch svg{position:absolute;inset:0;width:100%;height:100%}.sch svg path{fill:none;stroke-width:3;vector-effect:non-scaling-stroke}.sch svg path.flow{stroke-dasharray:10 8;animation:fl 1s linear infinite}@keyframes fl{to{stroke-dashoffset:-18}}.nd{position:absolute;box-sizing:border-box;border:2px solid;border-radius:12px;background:var(--card);padding:6px;font-size:11px;display:flex;flex-direction:column;justify-content:center;gap:1px;cursor:pointer}.nd b{font-size:13px}
 </style>
 </head>
 <body>
@@ -119,7 +120,7 @@ const dayLabel = ts=>{ if(dayKey(ts)===dayKey(Date.now())) return "Сегодн�
 const fmtLabel = f=>f.replace("x","×");
 
 /* ---------- состояние ---------- */
-let user=null, role="viewer", nick="", tab="dry", jfilter="all";
+let user=null, role="viewer", nick="", tab="dry", jfilter="all", evsel=0, presses={}, lines={};
 let evas={}, tests=[], journal=[], accepts={}, unsubs=[];
 const root = document.getElementById("root");
 const evaOf = d=> evas[d.id] || evaDef(d);
@@ -157,6 +158,8 @@ let dataStarted=false;
 function startData(){
   if(dataStarted){ render(); return; }
   dataStarted=true;
+  unsubs.push(onSnapshot(collection(db,"presses"), s=>{ presses={}; s.forEach(d=>{ presses[+d.id.replace("p","")]=d.data(); }); render(); }));
+  unsubs.push(onSnapshot(collection(db,"lines"), s=>{ lines={}; s.forEach(d=>{ lines[+d.id.replace("l","")]=d.data(); }); render(); }));
   unsubs.push(onSnapshot(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd) evas[d.id]={synced:!!x.synced, refPos:+x.refPos||0, refTime:+x.refTime||0, running:x.running!==false, rate:(+x.rate>0.05?+x.rate:dd.shelves/dd.lap), fmt:x.fmt||"", tpm:+x.tpm||0}; }); render(); }));
   unsubs.push(onSnapshot(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:+x.target, author:x.author||"", exitTs:+x.exitTs||0}); }); render(); }));
   unsubs.push(onSnapshot(query(collection(db,"chats","journal","messages"),orderBy("ts","desc"),limit(80)), s=>{ journal=s.docs.map(d=>({id:d.id,...d.data()})); render(); }));
@@ -265,11 +268,11 @@ function evaCard(d){
   return `<div class="card ${stopped?"stop":""}">${stopped?`<div class="banner"><span>⏸ ЛИНИЯ СТОИТ</span><span data-stop="${d.id}">простой ${mmss((now-e.refTime)/1000)}</span></div>`:""}
   <div class="in"><div class="row"><h2>${d.name}</h2><span class="small">→ глазурь ${d.line}</span><span class="sp"></span>${e.fmt?`<span class="small">${fmtLabel(e.fmt)}</span>`:""}</div>
   <div class="stats"><div class="stat"><span>На загрузке</span><b>${e.synced?pad3(shelfNow(e,now,d.shelves)):"—"}</b></div><div class="stat"><span>Скорость</span><b>${rateTxt(e.rate)} пол/мин</b></div><div class="stat"><span>Круг</span><b>${fmtDur(d.shelves/e.rate*60)}</b></div></div>
-  ${e.synced?"":`<div class="small">Положение полок неизвестно: поставьте тест или нажмите «Поправить полку»</div>`}
+  ${e.synced?"":`<div class="small">Положение неизвестно: нажмите «Поправить полку»</div>`}
   ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
-  <div class="row" style="margin-top:8px"><button data-act="fix" data-d="${d.id}">Поправить полку</button>${stopped?"":`<button class="warn" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}</div>
-  <button style="width:100%;margin-top:8px" data-act="speed" data-d="${d.id}">⚙ Скорость и формат плитки</button>`:""}
-  <div style="margin-top:8px">${ts.length?tr:`<div class="small">Тестов на этой Еве нет</div>`}</div></div></div>`;
+  <div class="row" style="margin-top:6px"><button data-act="fix" data-d="${d.id}">Поправить полку</button><button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
+  ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}`:""}
+  <div style="margin-top:8px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
 }
 function journalHtml(){
   const f=jfilter, list=journal.filter(m=>f==="all"||(f==="brak"&&m.type==="brak")||(f==="lap"&&m.type==="lap")||(f==="stop"&&m.type==="sys"&&/СТОИТ|пошла/.test(m.text||"")));
@@ -287,6 +290,38 @@ function journalHtml(){
   }
   return `<div class="chips">${[["all","Всё"],["brak","Брак"],["lap","Круги"],["stop","Остановки"]].map(([k,t])=>`<button class="${f===k?"on":""}" data-act="jf" data-k="${k}">${t}</button>`).join("")}</div>${out||`<div class="small">Записей нет</div>`}`;
 }
+/* ---------- сушилки: чипы, неактивные свёрнуты ---------- */
+const evaActive=d=>(evas[d.id]&&evas[d.id].synced)||tests.some(t=>t.dryer===d.name);
+function dryHtml(){
+  const col=d=>!evaActive(d)?"var(--tx2)":(evaOf(d).running?"var(--ok)":"var(--warn)");
+  const chips=`<div class="chips"><button class="${evsel===0?"on":""}" data-act="evsel" data-k="0">Все</button>${DRYERS.map((d,i)=>`<button class="${evsel===i+1?"on":""}" data-act="evsel" data-k="${i+1}"><span class="dot" style="background:${col(d)}"></span> ${d.name}</button>`).join("")}</div>`;
+  let list;
+  if(evsel>0) list=DRYERS[evsel-1]?evaCard(DRYERS[evsel-1]):"";
+  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(d=>`<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">не запущена, нет данных</span>${role==="press"&&onShift()?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}</div>`)].join("");
+  return chips+list;
+}
+/* ---------- Цех ---------- */
+const ST={run:"Работает",idle:"Простой",off:"Выключен"}, stCol=s=>s==="run"?"var(--ok)":s==="idle"?"var(--warn)":"var(--tx2)";
+const shiftStart=()=>{ const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), d0=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); return (h<8?d0-4*3600000:h<20?d0+3*3600000:d0+15*3600000); };
+function schemeHtml(){
+  const PH=78, ST_=86, TOT=516, EH=114;
+  let svg="", nodes="";
+  for(let i=1;i<=6;i++){
+    const p=presses[i]||{state:"off",eva:0}, y=(i-1)*ST_+PH/2;
+    if(p.eva>=1&&p.eva<=4){ const e=evas[DRYERS[p.eva-1].id], ey=(p.eva-.5)*TOT/4, run=p.state==="run", c=!run?"var(--tx2)":(e&&!e.running?"var(--warn)":"var(--ok)");
+      svg+=`<path d="M80 ${y} H95 V${ey} H110" stroke="${c}" ${run?'class="flow"':""} />`; }
+    const showP=+p.pressure>0&&+p.pressTs>=shiftStart();
+    nodes+=`<div class="nd" style="left:0;top:${(i-1)*ST_}px;width:26.67%;height:${PH}px;border-color:${stCol(p.state)}" data-act="pinfo" data-k="${i}"><b>Пресс ${i}</b><span style="color:${stCol(p.state)}">${ST[p.state]||"Выключен"}</span>${p.eva?`<span>→ Ева ${p.eva}</span>`:""}${+p.cpm>0&&p.state==="run"?`<span>${+(+p.cpm).toFixed(2)} цикл/мин</span>`:""}${showP?`<span>давл. ${+p.pressure}</span>`:""}</div>`;
+  }
+  for(let k=1;k<=4;k++){
+    const d=DRYERS[k-1], e=evas[d.id], ey=(k-.5)*TOT/4, l=lines[k]||{state:"off"}, c=!e||!e.synced?"var(--tx2)":e.running?"var(--ok)":"var(--warn)", lon=l.state!=="off"&&e&&e.synced;
+    svg+=`<path d="M190 ${ey} H220" stroke="${lon?(e.running&&l.state==="run"?"var(--ok)":"var(--warn)"):"var(--tx2)"}" ${lon&&e.running&&l.state==="run"?'class="flow"':""} />`;
+    nodes+=`<div class="nd" style="left:36.67%;top:${ey-EH/2}px;width:26.67%;height:${EH}px;border-color:${c}" data-act="einfo" data-k="${k}"><b>${d.name}</b><span style="color:${c}">${!e||!e.synced?"нет данных":e.running?"идёт":"СТОИТ"}</span><span>${rateTxt(e?e.rate:d.shelves/d.defLapMin)} пол/мин</span><span>тестов: ${tests.filter(t=>t.dryer===d.name&&!t.exitTs).length}</span></div>`;
+    nodes+=`<div class="nd" style="left:73.33%;top:${ey-EH/2}px;width:26.67%;height:${EH}px;border-color:${stCol(l.state)}" data-act="linfo" data-k="${k}"><b>Глазурь ${k}</b><span style="color:${stCol(l.state)}">${ST[l.state]||"Выключен"}</span></div>`;
+  }
+  return `<h2 style="margin:4px 0">Цех</h2><div class="small" style="margin-bottom:8px">Пресс → линии → Ева → глазурь и кристалина → накопитель → печь</div><div class="sch" style="height:${TOT}px"><svg viewBox="0 0 300 ${TOT}" preserveAspectRatio="none">${svg}</svg>${nodes}</div>`;
+}
+function infoModal(title,lines_){ modal(title,`<div style="white-space:pre-line">${lines_}</div>`,null); }
 /* ---------- смены (день 08–20, ночь 20–08, Екатеринбург UTC+5) ---------- */
 const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000;
 const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } };
@@ -311,13 +346,17 @@ function render(){
   if(!user||!nick) return;
   const initials=nick.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?";
   root.innerHTML=`<header><h1>КерамПульс</h1><div class="me" data-act="menu">${esc(initials)}</div></header>${shiftBar()}
-  <main>${tab==="dry"?DRYERS.map(evaCard).join("")+(role==="press"&&onShift()?`<button class="ok big" data-act="add">+ Тест</button>`:""):journalHtml()}</main>
-  <nav><button class="${tab==="dry"?"on":""}" data-act="tab" data-k="dry">🔥<br>Сушилки</button><button class="${tab==="jr"?"on":""}" data-act="tab" data-k="jr">📋<br>Журнал</button></nav>`;
+  <main>${tab==="dry"?dryHtml()+(role==="press"&&onShift()?`<button class="ok big" data-act="add">+ Тест</button>`:""):tab==="sch"?schemeHtml():journalHtml()}</main>
+  <nav><button class="${tab==="dry"?"on":""}" data-act="tab" data-k="dry">🔥<br>Сушилки</button><button class="${tab==="sch"?"on":""}" data-act="tab" data-k="sch">🧭<br>Цех</button><button class="${tab==="jr"?"on":""}" data-act="tab" data-k="jr">📋<br>Журнал</button></nav>`;
 }
 document.addEventListener("click", e=>{
   const el=e.target.closest("[data-act]"); if(!el) return;
   const a=el.dataset.act, d=DRYERS.find(x=>x.id===el.dataset.d);
   if(a==="tab"){ tab=el.dataset.k; render(); }
+  else if(a==="evsel"){ evsel=+el.dataset.k; render(); }
+  else if(a==="pinfo"){ const i=+el.dataset.k, p=presses[i]||{state:"off",eva:0}; infoModal("Пресс "+i,`Состояние: ${ST[p.state]||"Выключен"}\nРаботает на: ${p.eva?"Ева "+p.eva:"не задано"}\nФормат: ${p.fmt?fmtLabel(p.fmt):"не задан"}${+p.cpm>0?`\nЦиклов в минуту: ${+p.cpm}, плиток за цикл: ${p.per||1}`:""}${+p.pressure>0&&+p.pressTs>=shiftStart()?`\nДавление: ${+p.pressure}`:""}`); }
+  else if(a==="einfo"){ const d=DRYERS[+el.dataset.k-1], e=evas[d.id], now=Date.now(); const ts=tests.filter(t=>t.dryer===d.name); infoModal(d.name,`${e&&e.synced?"На загрузке: полка "+pad3(shelfNow(e,now,d.shelves)):"Положение неизвестно"}\nСостояние: ${!e||!e.synced?"нет данных":e.running?"идёт":"СТОИТ"}\nСкорость: ${rateTxt(e?e.rate:d.shelves/d.defLapMin)} пол/мин\nПрессы: ${Object.keys(presses).filter(i=>presses[i].eva===+el.dataset.k).map(i=>"№"+i).join(", ")||"не заданы"}\n${ts.length?"Тесты:\n"+ts.map(t=>"• "+t.design+", полка "+pad3(t.testShelf)+(t.exitTs?": вышла из Евы в "+clock(t.exitTs)+", ждёт глазурь":(e&&e.running?": остановка в "+clock(now+remSec(t,e,now)*1000):": линия стоит"))).join("\n"):"Тестов нет"}`); }
+  else if(a==="linfo"){ const k=+el.dataset.k, l=lines[k]||{state:"off"}; infoModal("Глазурь "+k,`Состояние: ${ST[l.state]||"Выключен"}\nПринимает из Евы ${k}, дальше кристалина, накопитель и печь`); }
   else if(a==="jf"){ jfilter=el.dataset.k; render(); }
   else if(a==="fix") dlgFix(d);
   else if(a==="toggle") doToggle(d);
