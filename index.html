@@ -816,8 +816,14 @@ function helpFound(){
   const q=helpQ.trim().toLowerCase(); if(!q||!kb) return [];
   const pool=kb.filter(a=>(helpMode===1?paramSources:kbSources)(helpPress).includes(a.src));
   if(helpMode===0&&/^\d+$/.test(q)){ const code=q.padStart(4,"0"); const ex=pool.filter(a=>a.c===code); return (ex.length?ex:pool.filter(a=>a.c.startsWith(q)||a.c.endsWith(q))).slice(0,60); }
-  const ws=q.split(/\s+/).filter(w=>w.length>=2);
-  return pool.filter(a=>{ const h=(a.t+" "+a.d).toLowerCase(); return ws.every(w=>h.includes(w)); }).slice(0,60);
+  const ws=q.replace(/ё/g,"е").split(/\s+/).filter(w=>w.length>=2).map(w=>w.length>=6?w.slice(0,-2):w);   // «деаэрация» найдёт и «деаэрации»
+  return pool.filter(a=>{ const h=(a.t+" "+a.d+" "+(a.s||"")).toLowerCase().replace(/ё/g,"е"); return ws.every(w=>h.includes(w)); })
+    .sort((a,b)=>(ws.every(w=>a.t.toLowerCase().includes(w))?0:1)-(ws.every(w=>b.t.toLowerCase().includes(w))?0:1)).slice(0,60);
+}
+function kbSnippet(d,q){
+  let w=q.trim().toLowerCase().split(/\s+/).find(x=>x.length>=2); if(!w) return d; if(w.length>=6) w=w.slice(0,-2);
+  const i=d.toLowerCase().indexOf(w); if(i<=60) return d.replace(/\n/g," ");
+  const f=d.lastIndexOf(" ",i-60); return "…"+d.slice(f<0?0:f+1).replace(/\n/g," ");
 }
 function subFixes(code){
   if(fixUnsub){ fixUnsub(); fixUnsub=null; }
@@ -841,7 +847,7 @@ function helpHtml(){
   found.map(a=>{ const key=a.src+a.c+a.t+a.s, open=helpOpen===key, fx=fixes[a.c];
     return `<div class="al" data-act="al" data-k="${esc(key)}" data-c="${helpMode===0?a.c:""}"><div class="row">${a.c?`<span class="c">${a.c}</span>`:""}<b style="flex:1">${esc(a.t)}</b></div>
     <div class="small" style="${/блок/i.test(a.k)?"color:var(--bad)":""}">${[a.k,helpMode===1?a.s:"",kbNames[a.src]].filter(Boolean).map(esc).join(" · ")}</div>
-    <div style="white-space:pre-line;${open?"":"display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"}">${esc(a.d)}</div>
+    <div style="white-space:pre-line;${open?"":"display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden"}">${esc(!open&&a.d.length>300?kbSnippet(a.d,helpQ):a.d)}</div>${!open&&a.d.length>300?`<div class="small">Нажмите, чтобы открыть целиком</div>`:""}
     ${open&&helpMode===0?`<div style="color:var(--ok);font-weight:700;margin-top:6px">Как решали у нас</div>${!fx?"…":!fx.length?`<div class="small">Пока никто не записал. Будьте первым.</div>`:fx.map(f=>`<div class="fix">${esc(f.text)}<div class="small">${f.press?"Пресс "+f.press+" · ":""}${esc(f.nick)}, ${dayLabel(f.ts)} ${clock(f.ts)}</div></div>`).join("")}
     <button style="width:100%;margin-top:6px" data-act="fix_add" data-c="${a.c}" data-s="${a.src}">+ Как решили у нас</button>`:""}</div>`; }).join("");
 }
