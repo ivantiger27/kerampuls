@@ -720,7 +720,39 @@ function journalHtml(){
     (out||`<div class="small">Записей нет</div>`)+`<button class="fab" data-act="brak">⚠ Брак</button>`;
 }
 /* --- Помощь (только прессовщики) --- */
-let kb=null, kbNames={}, kbState="", fixes={}, fixUnsub=null;
+let kb=null, kbNames={}, kbState="", fixes={}, fixUnsub=null, helpMode=0, helpDef="", cases=null, casesUnsub=null;
+const CASE_DEFECTS=["Отслоение","Трещина","Недопрессовка","Скол","Геометрия","Толщина","Пятна","Другое"];
+const paramSources=p=> p>=1&&p<=3?["pold"]:p>=4&&p<=6?["p750","p620"]:["pold","p750","p620"];
+function subCases(){ if(casesUnsub) return; casesUnsub=onSnapshot(query(collection(db,"cases"),orderBy("ts","desc"),limit(300)), s=>{ cases=s.docs.map(d=>({id:d.id,...d.data()})); render(); }); }
+function casesHtml(){
+  if(!casesUnsub) setTimeout(subCases,0);
+  const list=(cases||[]).filter(c=>(!helpPress||c.press===helpPress)&&(!helpDef||c.defect===helpDef));
+  const hl={yes:["✓ помогло","var(--ok)"],part:["частично","var(--warn)"],no:["✗ не помогло","var(--bad)"]};
+  return `<div class="chips"><button class="${!helpDef?"on":""}" data-act="hdef" data-k="">Любой брак</button>${CASE_DEFECTS.map(d=>`<button class="${helpDef===d?"on":""}" data-act="hdef" data-k="${d}">${d}</button>`).join("")}</div>
+  <button class="ok big" data-act="case_add">+ Записать случай</button>
+  ${cases===null?`<div class="small">Загружаю…</div>`:!list.length?`<div class="small" style="margin:6px 0">Пока записей нет. Убрали брак — запишите, что сделали: следующей смене будет проще, а потом на этих записях будет учиться ИИ-помощник.</div>`:""}
+  ${list.map(c=>{ const h=hl[c.helped]||["",""]; return `<div class="al"><div class="row"><b style="flex:1">Пресс ${c.press}${c.stamp?" · штамп "+c.stamp:""} · ${esc(c.defect)}</b><b style="color:${h[1]};font-size:13px">${h[0]}</b></div>
+    ${c.what?`<div class="small">Было: ${esc(c.what)}</div>`:""}<div>${esc(c.did)}</div>
+    <div class="row"><span class="small" style="flex:1">${esc(c.nick)}, ${dayLabel(c.ts)} ${clock(c.ts)}</span>${c.uid===user.uid?`<button class="txt" style="color:var(--tx2)" data-act="case_del" data-k="${c.id}">Удалить</button>`:""}</div></div>`; }).join("")}`;
+}
+function dlgCase(){
+  let p=helpPress, st=0, df=helpDef, hp="";
+  const chips=(g,arr,cur)=>`<div class="fm" data-g="${g}">${arr.map(([v,t])=>`<button data-v="${v}" class="${String(cur)===String(v)?"on":""}">${t}</button>`).join("")}</div>`;
+  const ov=modal("Брак: как решили", `<div class="small">Пресс</div>${chips("p",[1,2,3,4,5,6].map(i=>[i,i]),p)}
+  <div class="small">Штамп (если на одном)</div>${chips("st",[[0,"все"],[1,1],[2,2],[3,3],[4,4]],st)}
+  <div class="small">Брак</div>${chips("df",CASE_DEFECTS.map(d=>[d,d]),df)}
+  <input id="wh" maxlength="200" placeholder="Что было (по желанию)"><textarea id="dd" maxlength="500" placeholder="Что сделали"></textarea>
+  <div class="small">Помогло?</div>${chips("hp",[["yes","Да"],["part","Частично"],["no","Нет"]],hp)}
+  <div class="small" id="miss" style="color:var(--warn)"></div>`, o=>{
+    const did=o.querySelector("#dd").value.trim();
+    const miss=[!(p>=1)?"пресс":null,!df?"брак":null,!did?"что сделали":null,!hp?"помогло ли":null].filter(Boolean);
+    if(miss.length){ o.querySelector("#miss").textContent="Не хватает: "+miss.join(", "); return false; }
+    addDoc(collection(db,"cases"),{press:p,stamp:st,defect:df,what:o.querySelector("#wh").value.trim(),did,helped:hp,uid:user.uid,nick,ts:Date.now()});
+  }, "Сохранить");
+  ov.querySelectorAll(".fm[data-g] button").forEach(b=>b.onclick=()=>{ const g=b.parentElement.dataset.g, v=b.dataset.v;
+    if(g==="p") p=+v; else if(g==="st") st=+v; else if(g==="df") df=v; else hp=v;
+    b.parentElement.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); });
+}
 async function loadKb(){
   kbState="loading"; render();
   try{
@@ -745,14 +777,14 @@ async function uploadKb(file){
       index[k]={name:s.name||k,parts:parts.length}; total+=items.length;
     }
     await setDoc(doc(db,"kb","index"),{sources:index,ts:Date.now()});
-    kb=null; kbState=""; toast("Справочник загружен: "+total+" аварий"); render();
+    kb=null; kbState=""; toast("Справочник загружен: "+total+" записей"); render();
   }catch(e){ toast("Ошибка файла или правил базы"); }
 }
 const kbSources=p=> p>=1&&p<=3?["old"]:p>=4&&p<=6?["touch","ph620"]:["old","touch","ph620"];
 function helpFound(){
   const q=helpQ.trim().toLowerCase(); if(!q||!kb) return [];
-  const pool=kb.filter(a=>kbSources(helpPress).includes(a.src));
-  if(/^\d+$/.test(q)){ const code=q.padStart(4,"0"); const ex=pool.filter(a=>a.c===code); return (ex.length?ex:pool.filter(a=>a.c.startsWith(q)||a.c.endsWith(q))).slice(0,60); }
+  const pool=kb.filter(a=>(helpMode===1?paramSources:kbSources)(helpPress).includes(a.src));
+  if(helpMode===0&&/^\d+$/.test(q)){ const code=q.padStart(4,"0"); const ex=pool.filter(a=>a.c===code); return (ex.length?ex:pool.filter(a=>a.c.startsWith(q)||a.c.endsWith(q))).slice(0,60); }
   const ws=q.split(/\s+/).filter(w=>w.length>=2);
   return pool.filter(a=>{ const h=(a.t+" "+a.d).toLowerCase(); return ws.every(w=>h.includes(w)); }).slice(0,60);
 }
@@ -763,19 +795,22 @@ function subFixes(code){
 }
 function helpHtml(){
   if(kb===null&&!kbState) setTimeout(loadKb,0);
-  const found=helpFound();
+  const seg=`<div class="seg" style="margin:4px 0 6px">${["Аварии","Параметры","Брак у нас"].map((t,i)=>`<button class="${helpMode===i?"on":""}" data-act="hm" data-k="${i}">${t}</button>`).join("")}</div>`;
+  const pchips=`<div class="chips">${[0,1,2,3,4,5,6].map(i=>`<button class="${helpPress===i?"on":""}" data-act="hp" data-k="${i}">${i?"Пресс "+i:"Все"}</button>`).join("")}</div>`;
+  if(helpMode===2) return seg+pchips+casesHtml();
+  const found=helpFound(), pc=kb?kb.filter(a=>paramSources(0).includes(a.src)).length:0;
   const msg= (kbState==="loading"||!kbState)?"Загружаю справочник…": kbState==="empty"?"Справочник ещё не загружен: Профиль → «Загрузить справочник аварий» и выберите файл kb_alarms.json.":
     kbState==="error"?`Нет связи с базой. <button class="txt" data-act="kb_retry">Повторить</button>`:
-    !helpQ.trim()?`В справочнике ${kb?kb.length:0} аварий из руководств SACMI. Выберите пресс (1–3 старый пульт, 4–6 сенсорный) и введите номер с экрана.`:
-    !found.length?"Ничего не найдено. Проверьте номер или выберите «Все».":"";
-  return `<h2 style="margin:4px 0">Помощник: аварии прессов</h2>
-  <div class="chips">${[0,1,2,3,4,5,6].map(i=>`<button class="${helpPress===i?"on":""}" data-act="hp" data-k="${i}">${i?"Пресс "+i:"Все"}</button>`).join("")}</div>
-  <div id="hsbox"></div><div class="small" style="margin:4px 0 8px">${msg}</div>`+
-  found.map(a=>{ const key=a.src+a.c+a.t, open=helpOpen===key, fx=fixes[a.c];
-    return `<div class="al" data-act="al" data-k="${esc(key)}" data-c="${a.c}"><div class="row"><span class="c">${a.c}</span><b style="flex:1">${esc(a.t)}</b></div>
-    <div class="small" style="${/блок/i.test(a.k)?"color:var(--bad)":""}">${[a.k,kbNames[a.src]].filter(Boolean).map(esc).join(" · ")}</div>
-    <div style="${open?"":"display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"}">${esc(a.d)}</div>
-    ${open?`<div style="color:var(--ok);font-weight:700;margin-top:6px">Как решали у нас</div>${!fx?"…":!fx.length?`<div class="small">Пока никто не записал. Будьте первым.</div>`:fx.map(f=>`<div class="fix">${esc(f.text)}<div class="small">${f.press?"Пресс "+f.press+" · ":""}${esc(f.nick)}, ${dayLabel(f.ts)} ${clock(f.ts)}</div></div>`).join("")}
+    helpMode===1&&!pc?`<span style="color:var(--warn)">Параметров в справочнике пока нет: загрузите новый файл kb_alarms.json (Профиль → «Загрузить справочник аварий»).</span>`:
+    helpMode===1&&!helpQ.trim()?`${pc} параметров и страниц пульта из руководств SACMI. Выберите пресс и введите слово: давление, деаэрация, толщина, засыпка, торможение…`:
+    !helpQ.trim()?`В справочнике ${kb?kb.length-pc:0} аварий из руководств SACMI. Выберите пресс (1–3 старый пульт, 4–6 сенсорный) и введите номер с экрана.`:
+    !found.length?"Ничего не найдено. Проверьте запрос или выберите «Все».":"";
+  return seg+pchips+`<div id="hsbox"></div><div class="small" style="margin:4px 0 8px">${msg}</div>`+
+  found.map(a=>{ const key=a.src+a.c+a.t+a.s, open=helpOpen===key, fx=fixes[a.c];
+    return `<div class="al" data-act="al" data-k="${esc(key)}" data-c="${helpMode===0?a.c:""}"><div class="row">${a.c?`<span class="c">${a.c}</span>`:""}<b style="flex:1">${esc(a.t)}</b></div>
+    <div class="small" style="${/блок/i.test(a.k)?"color:var(--bad)":""}">${[a.k,helpMode===1?a.s:"",kbNames[a.src]].filter(Boolean).map(esc).join(" · ")}</div>
+    <div style="white-space:pre-line;${open?"":"display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"}">${esc(a.d)}</div>
+    ${open&&helpMode===0?`<div style="color:var(--ok);font-weight:700;margin-top:6px">Как решали у нас</div>${!fx?"…":!fx.length?`<div class="small">Пока никто не записал. Будьте первым.</div>`:fx.map(f=>`<div class="fix">${esc(f.text)}<div class="small">${f.press?"Пресс "+f.press+" · ":""}${esc(f.nick)}, ${dayLabel(f.ts)} ${clock(f.ts)}</div></div>`).join("")}
     <button style="width:100%;margin-top:6px" data-act="fix_add" data-c="${a.c}" data-s="${a.src}">+ Как решили у нас</button>`:""}</div>`; }).join("");
 }
 
@@ -790,7 +825,8 @@ function render(chatChanged){
   main.innerHTML= tab==="dry"?dryHtml(): tab==="sch"?schemeHtml(): tab==="chat"?chatHtml(): tab==="help"?helpHtml(): journalHtml();
   if(tab==="help"){
     if(!searchBox){ searchBox=document.createElement("input"); searchBox.placeholder="Номер аварии или слова, например 2112"; searchBox.oninput=()=>{ helpQ=searchBox.value; helpOpen=null; render(); searchBox.focus(); }; }
-    document.getElementById("hsbox").appendChild(searchBox);
+    searchBox.placeholder= helpMode===1?"Слова: деаэрация, толщина, давление…":"Номер аварии или слова, например 2112";
+    document.getElementById("hsbox")?.appendChild(searchBox);
   }
   document.body.className= tab==="chat"?"chat":"";
   document.getElementById("comp").style.display= tab==="chat"?"block":"none";
@@ -837,6 +873,10 @@ document.addEventListener("click", e=>{
   else if(a==="clear_chat"||a==="clear_jr"){ const ch=a==="clear_chat"?"general":"journal";
     modal(ch==="general"?"Очистить чат?":"Очистить журнал?","<p>Все записи будут удалены у всех.</p>",()=>{ (async()=>{ const s=await getDocs(collection(db,"chats",ch,"messages")); const docs=s.docs; for(let i=0;i<docs.length;i+=400){ const b=writeBatch(db); docs.slice(i,i+400).forEach(x=>b.delete(x.ref)); await b.commit(); } if(ch==="general") deleteDoc(doc(db,"config","shift_task")); toast("Удалено: "+docs.length); })(); },"Очистить"); }
   else if(a==="hp"){ helpPress=+el.dataset.k; render(); }
+  else if(a==="hm"){ helpMode=+el.dataset.k; helpOpen=null; render(); }
+  else if(a==="hdef"){ helpDef=el.dataset.k; render(); }
+  else if(a==="case_add") dlgCase();
+  else if(a==="case_del"){ const id=el.dataset.k; modal("Удалить запись?","",()=>{ deleteDoc(doc(db,"cases",id)); },"Удалить"); }
   else if(a==="kb_retry"){ kb=null; kbState=""; render(); }
   else if(a==="al"){ const k=el.dataset.k; helpOpen=helpOpen===k?null:k; subFixes(helpOpen?el.dataset.c:null); render(); }
   else if(a==="fix_add"){ const code=el.dataset.c, src=el.dataset.s; let pr=helpPress;
