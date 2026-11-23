@@ -751,7 +751,11 @@ async function aiSend(){
   aiDraft=""; const item={q,press:helpPress,busy:true,answer:"",sources:[],error:""}; aiList.unshift(item); render();
   try{
     const token=await auth.currentUser.getIdToken();
-    const r=await fetch(aiUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token,q,press:helpPress})});
+    // записи цеха отправляем вместе с вопросом (из Облака к Firebase не достучаться)
+    const [cs,fs]=await Promise.all([getDocs(query(collection(db,"cases"),orderBy("ts","desc"),limit(200))).catch(()=>null), getDocs(query(collection(db,"fixes"),limit(300))).catch(()=>null)]);
+    const cases=cs?cs.docs.map(d=>{const x=d.data(); return {press:x.press||0,stamp:x.stamp||0,defect:x.defect||"",what:x.what||"",did:x.did||"",helped:x.helped||"",ts:x.ts||0};}):[];
+    const fixes=fs?fs.docs.map(d=>{const x=d.data(); return {code:x.code||"",press:x.press||0,text:x.text||""};}):[];
+    const r=await fetch(aiUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token,q,press:helpPress,cases,fixes})});
     const j=await r.json().catch(()=>null);
     if(r.ok&&j){ item.answer=j.answer||""; item.sources=(j.sources||[]).map(o=>`${o.id} — ${o.title} (${o.name})`); }
     else item.error=(j&&j.error)||("Ошибка сервера ("+r.status+")");
