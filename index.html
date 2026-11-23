@@ -158,7 +158,7 @@ function startData(){
   if(dataStarted){ render(); return; }
   dataStarted=true;
   unsubs.push(onSnapshot(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd) evas[d.id]={synced:!!x.synced, refPos:+x.refPos||0, refTime:+x.refTime||0, running:x.running!==false, rate:(+x.rate>0.05?+x.rate:dd.shelves/dd.lap), fmt:x.fmt||"", tpm:+x.tpm||0}; }); render(); }));
-  unsubs.push(onSnapshot(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:+x.target, author:x.author||""}); }); render(); }));
+  unsubs.push(onSnapshot(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:+x.target, author:x.author||"", exitTs:+x.exitTs||0}); }); render(); }));
   unsubs.push(onSnapshot(query(collection(db,"chats","journal","messages"),orderBy("ts","desc"),limit(80)), s=>{ journal=s.docs.map(d=>({id:d.id,...d.data()})); render(); }));
   unsubs.push(onSnapshot(query(collection(db,"accepts"),orderBy("ts","desc"),limit(100)), s=>{ accepts={}; s.forEach(d=>{ const x=d.data(); (accepts[x.msg] ||= []).push(x); }); render(); }));
 }
@@ -167,7 +167,7 @@ function startData(){
 const jcol = ()=>collection(db,"chats","journal","messages");
 const log = (text,type="sys",tag="")=> addDoc(jcol(), {uid:user.uid, author:nick, text, ts:Date.now(), type, tag, role});
 const evaMap = e=>({synced:e.synced, refPos:e.refPos, refTime:e.refTime, running:e.running, rate:e.rate, fmt:e.fmt, tpm:e.tpm});
-const testMap = t=>({id:t.id, dryer:t.dryer, design:t.design, testShelf:t.testShelf, target:t.target, author:t.author});
+const testMap = t=>({id:t.id, dryer:t.dryer, design:t.design, testShelf:t.testShelf, target:t.target, author:t.author, exitTs:t.exitTs||0});
 
 function doFix(d,c){
   const now=Date.now(), old=evaOf(d), ne=evaSynced(old,c,d.shelves,now), b=writeBatch(db);
@@ -192,12 +192,16 @@ function doAdd(d,name,shelf){
   b.set(doc(db,"tests",String(nt.id)), testMap(nt)); b.commit();
   log(`${d.name}: поставлен тест «${name}», полка ${pad3(shelf)} — ${nick}`);
 }
+function doExit(t){
+  const now=Date.now(); setDoc(doc(db,"tests",String(t.id)), {exitTs:now}, {merge:true});
+  log(`Круг прошёл: тест «${t.design}», ${t.dryer}, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(now)} (в пути ${fmtStop((now-t.id)/1000)}). Ждём выхода на глазурь`, "lap", "Круг пройден");
+}
 function doDone(t){
   const now=Date.now(), b=writeBatch(db);
   b.delete(doc(db,"tests",String(t.id)));
   b.set(doc(db,"history",String(t.id)), {...testMap(t), doneAt:now, doneBy:nick});
   b.commit();
-  log(`Круг прошёл: тест «${t.design}», ${t.dryer}, полка ${pad3(t.testShelf)} на выходе в ${clock(now)} (в пути ${fmtStop((now-t.id)/1000)}). На глазурь выйдет после сброса накопителя`, "lap", "Круг пройден");
+  log(`Вышел на глазурь: тест «${t.design}», ${t.dryer} в ${clock(now)}${t.exitTs?", с выхода из Евы прошло "+fmtStop((now-t.exitTs)/1000):""}`, "lap", "Вышел на глазурь");
 }
 function doAccept(m){ setDoc(doc(db,"accepts",m.id+"_"+role), {msg:m.id, role, uid:user.uid, nick, ts:Date.now()}); }
 
@@ -251,6 +255,7 @@ function dlgSpeed(d){
 function evaCard(d){
   const e=evaOf(d), now=Date.now(), stopped=!e.running, can=role==="press"&&onShift(), ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,e,now)-remSec(b,e,now));
   const tr = ts.map(t=>{
+    if(t.exitTs) return `<div class="test" style="border:2px solid #42a5f5"><b style="font-size:18px">${esc(t.design)}</b><div style="color:#42a5f5;font-weight:700">🔄 Круг прошёл, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}</div><div class="small">Ждёт выхода на глазурь уже ${fmtStop((now-t.exitTs)/1000)}${t.author?" · поставил "+esc(t.author):""}</div>${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Вышел на глазурь</button>`:""}</div>`;
     const rem=remSec(t,e,now), arr=leftSh(t,e,now)<=0.5, col=(stopped||rem<900)?"var(--warn)":"var(--ok)", pr=Math.min(100,Math.max(0,(1-leftSh(t,e,now)/d.shelves)*100));
     return `<div class="test"><div class="bar"><i style="width:${pr}%;background:${arr?"var(--ok)":col}"></i></div><b style="font-size:18px">${esc(t.design)}</b>
     ${arr?`<div style="color:var(--ok);font-weight:700;font-size:18px">Полка с тестом на месте!</div>`:`<div class="stats"><div class="stat"><span>Остановка</span><b style="color:${col}">${stopped?"—":clock(now+rem*1000)}</b></div><div class="stat"><span>Осталось</span><b style="color:${col}">${fmtDur(rem)}</b></div><div class="stat"><span>Полка</span><b>${pad3(t.testShelf)}</b></div></div><div class="small">ещё ${Math.ceil(leftSh(t,e,now))} полок</div>`}
@@ -271,7 +276,7 @@ function journalHtml(){
   let out="", last=null;
   for(const m of list){
     const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
-    if(m.type==="lap") out+=`<div class="lap"><b>🔄 КРУГ ПРОШЁЛ</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+    if(m.type==="lap") out+=`<div class="lap"><b>${(m.text||"").startsWith("Вышел на глазурь")?"✅ ВЫШЕЛ НА ГЛАЗУРЬ":"🔄 КРУГ ПРОШЁЛ"}</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
     else if(m.type==="brak"){
       const acc=accepts[m.id]||[], to=m.to||[], mine=to.includes(role)&&!acc.some(a=>a.role===role);
       out+=`<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.text?`<div>${esc(m.text)}</div>`:""}
@@ -318,7 +323,7 @@ document.addEventListener("click", e=>{
   else if(a==="toggle") doToggle(d);
   else if(a==="speed") dlgSpeed(d);
   else if(a==="add") dlgAdd();
-  else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) modal("Убрать тест?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>`, ()=>doDone(t), "Да, круг прошёл"); }
+  else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) modal(t.exitTs?"Тест вышел на глазурь?":"Круг прошёл?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>`, ()=>t.exitTs?doDone(t):doExit(t), t.exitTs?"Да, вышел на глазурь":"Да, круг прошёл"); }
   else if(a==="brig"){ ls("brigade",el.dataset.b); document.querySelector(".ov")?.remove(); render(); }
   else if(a==="accept"){ const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
   else if(a==="accept_shift"){ ls("shift_"+user.uid,Date.now()); const s=sched(); log(nick+" принял смену"+(s&&s.mine?" ("+s.n+")":"")); render(); }
