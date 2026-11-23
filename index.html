@@ -2,59 +2,127 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="КерамПульс">
 <meta name="theme-color" content="#0f1413">
 <title>КерамПульс</title>
 <style>
-:root{--bg:#0f1413;--card:#1f2927;--card2:#0f1413;--tx:#e0e4e2;--tx2:#9fb0aa;--ok:#5cd6b3;--onok:#00382c;--warn:#f59e0b;--bad:#ef4444;--line:#33413e}
-@media (prefers-color-scheme: light){:root{--bg:#f5f7f7;--card:#e1eae7;--card2:#f5f7f7;--tx:#191c1c;--tx2:#4a5753;--ok:#0b7a62;--onok:#fff;--warn:#b86e00;--line:#b9c7c3}}
+:root{--bg:#0f1413;--card:#1c2624;--card2:#141c1b;--tx:#e0e4e2;--tx2:#9fb0aa;--ok:#5cd6b3;--onok:#00382c;--warn:#f59e0b;--bad:#ef4444;--line:#33413e;--blue:#42a5f5;--amber:#f2b33d}
+:root[data-theme="light"]{--bg:#f5f7f7;--card:#e3ebe8;--card2:#f8faf9;--tx:#191c1c;--tx2:#4a5753;--ok:#0b7a62;--onok:#fff;--warn:#b86e00;--line:#b9c7c3}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f5f7f7;--card:#e3ebe8;--card2:#f8faf9;--tx:#191c1c;--tx2:#4a5753;--ok:#0b7a62;--onok:#fff;--warn:#b86e00;--line:#b9c7c3}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,system-ui,Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
-header{position:sticky;top:0;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 14px 8px;display:flex;align-items:center;justify-content:space-between;z-index:5}
-header h1{font-size:22px;margin:0}
-.me{background:var(--ok);color:var(--onok);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:700}
-main{padding:0 12px 12px}
-.card{background:var(--card);border-radius:16px;margin-bottom:10px;overflow:hidden}.card .in{padding:10px 12px!important}
-.card.stop{border:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 20%,var(--card))}
-.banner{background:color-mix(in srgb,var(--warn) 30%,transparent);color:var(--warn);padding:10px 14px;display:flex;justify-content:space-between;font-weight:800;font-size:19px}
-.in{padding:14px}
-.row{display:flex;gap:8px;align-items:center}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,system-ui,Roboto,sans-serif}
+body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+body.chat{padding-bottom:calc(190px + env(safe-area-inset-bottom))}
+#hdr{position:sticky;top:0;background:var(--bg);padding:calc(8px + env(safe-area-inset-top)) 14px 6px;display:flex;align-items:center;gap:10px;z-index:6}
+#bar{position:sticky;top:calc(60px + env(safe-area-inset-top));z-index:5}
+main{padding:0 12px 12px;max-width:720px;margin:0 auto}
+.av{width:40px;height:40px;border-radius:50%;background:var(--ok);color:var(--onok);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;overflow:hidden;object-fit:cover;cursor:pointer}
+img.av{display:block}
+.st-on{display:flex;flex-direction:column;cursor:pointer;flex:1;min-width:0}
+.st-on b{font-size:18px}.st-on small{font-size:11px;color:var(--tx2)}
+.st-off{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.st-off b{color:var(--warn);font-size:17px;display:block}.st-off small{font-size:11px;color:var(--tx2)}
+.dotg{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ok);margin-right:8px}
+.card{background:var(--card);border-radius:16px;margin-bottom:8px;overflow:hidden}
+.card .in{padding:8px 12px}
+.card.stop{border:3px solid var(--warn)}
+.banner{background:color-mix(in srgb,var(--warn) 30%,transparent);color:var(--warn);padding:8px 12px;display:flex;justify-content:space-between;font-weight:800;font-size:18px}
+.row{display:flex;gap:6px;align-items:center}
 .sp{flex:1}
-h2{margin:0;font-size:22px}
-.small{font-size:13px;color:var(--tx2)}
-.stats{display:flex;gap:6px;margin:8px 0}
-.stat{flex:1}.stat b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.stat span{font-size:12px;color:var(--tx2)}
-button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:24px;padding:8px 12px;min-height:44px;flex:1}
+h2{margin:0;font-size:20px}
+.small{font-size:12px;color:var(--tx2)}
+.stats{display:flex;gap:6px;margin:4px 0}
+.stat{flex:1;min-width:0}.stat b{display:block;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}.stat span{font-size:12px;color:var(--tx2)}
+button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:24px;padding:8px 12px;min-height:44px;flex:1;cursor:pointer}
 button.ok{background:var(--ok);color:var(--onok);border:0;font-weight:700}
 button.warn{background:var(--warn);color:#2b1b00;border:0;font-weight:700}
-button.big{width:100%;min-height:48px;font-size:16px;font-weight:800;margin-bottom:8px}
-button:disabled{opacity:.5}
-.test{background:var(--card2);border-radius:12px;padding:12px;margin-top:8px}
-.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:6px}.bar i{display:block;height:100%;background:var(--ok)}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:6px}
-nav button{border:0;border-radius:16px;min-height:52px;font-size:13px;flex:1}
+button.txt{border:0;color:var(--ok);flex:none;padding:6px 8px;min-height:36px}
+button.big{width:100%;min-height:48px;font-size:16px;font-weight:800;margin:4px 0 8px}
+button:disabled{opacity:.45}
+.test{background:var(--card2);border-radius:12px;padding:10px;margin-top:6px}
+.test.out{border:2px solid var(--blue)}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:6px}.bar i{display:block;height:100%}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);padding:6px 6px calc(6px + env(safe-area-inset-bottom));gap:4px;z-index:7}
+nav button{border:0;border-radius:16px;min-height:52px;font-size:12px;flex:1;padding:4px;position:relative}
 nav button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);color:var(--ok);font-weight:700}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px}
-.chips button{flex:none;min-height:40px;padding:8px 14px}.chips button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
+nav i{position:absolute;top:2px;right:18%;background:var(--bad);color:#fff;font-style:normal;font-size:10px;border-radius:9px;padding:1px 5px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px}
+.chips button{flex:none;min-height:38px;padding:6px 14px}.chips button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.slim{display:flex;align-items:center;gap:8px;padding:2px 12px;opacity:.75}.slim button{flex:none;min-height:36px;font-size:13px;border:0;color:var(--ok)}
 .sys{font-size:12px;color:var(--tx2);padding:3px 2px}
-.lap{border:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:14px;padding:12px;margin:6px 0}
-.lap b{color:var(--ok);font-weight:800}
-.brak{border:1.5px solid var(--bad);background:color-mix(in srgb,var(--bad) 16%,transparent);border-radius:14px;padding:10px;margin:6px 0}
+.lap{border:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:14px;padding:10px;margin:6px 0}
+.lap b.t{color:var(--ok);font-weight:800}
+.brak{border:1.5px solid var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent);border-radius:14px;padding:10px;margin:6px 0}
 .brak b.t{color:var(--bad)}
 .day{text-align:center;margin:10px 0 4px}.day span{background:var(--card);border-radius:10px;padding:2px 12px;font-size:12px;color:var(--tx2)}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.md{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.md{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
 .md h3{margin:0 0 10px}
-input,select{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--tx);margin:4px 0 10px}
+.md .acts{display:flex;gap:8px;margin-top:12px}
+input,select,textarea{font:inherit;width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--tx);margin:4px 0 8px}
+textarea{min-height:70px;resize:vertical}
 .login{max-width:420px;margin:12vh auto;padding:0 20px}
 .err{color:var(--bad);margin:6px 0}
-.fm{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.fm button{flex:none;min-height:40px;padding:8px 12px}.fm button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
-.sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;font-size:13px}.sb.on{background:rgba(46,160,67,.15)}.sb.off{background:rgba(230,160,0,.2)}.sb button{padding:6px 12px;width:auto;flex:none}
-.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}.chips button{flex:none;min-height:38px;padding:6px 12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%}.card.slim{display:flex;align-items:center;gap:8px;padding:2px 12px;opacity:.7}.card.slim button{flex:none;min-height:36px;padding:4px 10px}.sch{position:relative}.sch svg{position:absolute;inset:0;width:100%;height:100%}.sch svg path{fill:none;stroke-width:3;vector-effect:non-scaling-stroke}.sch svg path.flow{stroke-dasharray:10 8;animation:fl 1s linear infinite}@keyframes fl{to{stroke-dashoffset:-18}}.nd{position:absolute;box-sizing:border-box;border:2px solid;border-radius:12px;background:var(--card);padding:6px;font-size:11px;display:flex;flex-direction:column;justify-content:center;gap:1px;cursor:pointer}.nd b{font-size:13px}
-.bb{display:flex;align-items:center;gap:8px;background:#ef4444;color:#fff;padding:4px 8px 4px 16px;cursor:pointer}.bb button{flex:none;min-height:36px;padding:4px 12px;color:#fff;border-color:#fff;font-weight:700}
+.fm{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.fm button{flex:none;min-height:38px;padding:6px 12px}.fm button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
+.bb{display:flex;align-items:center;gap:8px;background:var(--bad);color:#fff;padding:4px 8px 4px 16px;cursor:pointer}.bb button{flex:none;min-height:36px;padding:4px 12px;color:#fff;border:0;font-weight:700}
+.irow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.irow span{flex:1;color:var(--tx2);font-size:14px}.irow b{flex:1.4;text-align:right;font-weight:600;white-space:pre-line}
+.panel{background:#0d1726;border-radius:14px;padding:10px;color:#dce6f2;font-family:ui-monospace,Menlo,Consolas,monospace}
+.panel .hd{display:flex;justify-content:space-between;font-weight:700;font-size:13px}
+.panel .lg{display:flex;gap:10px;font-size:11px;color:#8a9bb0;margin:4px 0 10px;font-family:system-ui}
+.led{display:inline-block;width:9px;height:9px;border-radius:50%;border:1px solid rgba(0,0,0,.45);vertical-align:middle;margin-right:4px}
+.sch{position:relative}
+.sch svg.pipes{position:absolute;left:0;top:0;overflow:visible}
+.pipe{fill:none;stroke:#34465e;stroke-width:7;stroke-linejoin:round}
+.flowp{fill:none;stroke-width:3;stroke-dasharray:9 7}
+.flowp.run{animation:fl .9s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-16}}
+.nd{position:absolute;background:#15243a;border:1px solid #34465e;border-radius:8px;display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;overflow:hidden}
+.nd .tx{flex:1;min-width:0;font-size:10px;line-height:1.25}
+.nd .tx b{font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.nd .tx div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd.off{color:#8a9bb0}
+.big3{font-size:20px;font-weight:700}
+.ram{animation:ram .9s ease-in-out infinite}
+@keyframes ram{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.shelves{animation:sh .9s linear infinite}
+.shelves2{animation:sh2 .9s linear infinite}
+@keyframes sh{to{transform:translateY(-8px)}}
+@keyframes sh2{to{transform:translateY(8px)}}
+.msgs{display:flex;flex-direction:column;gap:6px}
+.mrow{display:flex;align-items:flex-end;gap:6px}
+.mrow.me{justify-content:flex-end}
+.bub{max-width:78%;background:var(--card);border-radius:14px;padding:8px 10px}
+.mrow.me .bub{background:color-mix(in srgb,var(--ok) 28%,var(--card))}
+.bub.lead{border:2px solid var(--warn)}
+.bub .au{font-size:12px;font-weight:700;color:var(--ok)}
+.bub .au.l{color:var(--warn)}
+.bub .tm{font-size:11px;color:var(--tx2);text-align:right}
+.ph{display:block;width:200px;max-width:100%;height:150px;object-fit:cover;border-radius:8px;margin:4px 0;cursor:pointer}
+#comp{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));background:var(--bg);padding:6px 10px;display:none;z-index:6}
+#comp .qp{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}#comp .qp button{flex:none;min-height:34px;padding:4px 12px;font-size:14px}
+#comp .in{display:flex;gap:6px;align-items:center}
+#comp input[type=text]{margin:0;flex:1}
+.clip{flex:none;width:44px;height:44px;border-radius:50%;border:0;display:flex;align-items:center;justify-content:center;color:var(--tx2);padding:0}
+.clip svg{width:24px;height:24px;fill:currentColor}
+.ic{width:18px;height:18px;fill:currentColor;vertical-align:middle;margin-right:4px}
+.pend{position:relative;display:inline-block;margin:0 0 6px}.pend img{width:96px;height:72px;object-fit:cover;border-radius:8px}.pend b{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+.task{border-radius:10px;background:color-mix(in srgb,var(--amber) 18%,transparent);padding:6px 10px;margin:4px 0 8px;cursor:pointer}
+.task.acked{background:color-mix(in srgb,var(--amber) 9%,transparent)}
+.fab{position:fixed;right:16px;bottom:calc(80px + env(safe-area-inset-bottom));background:var(--bad);color:#fff;border:0;border-radius:18px;min-height:56px;padding:0 20px;font-weight:800;font-size:16px;z-index:6;flex:none}
+.viewer{position:fixed;inset:0;background:#000;z-index:30;display:flex;align-items:center;justify-content:center}
+.viewer img{max-width:100%;max-height:100%}
+.viewer span{position:absolute;bottom:24px;color:#fff;font-size:12px}
+.al{background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.al .c{font:800 18px ui-monospace,Menlo,monospace;margin-right:8px}
+.fix{background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:8px;padding:8px;margin:4px 0}
+.seg{display:flex;border:1px solid var(--line);border-radius:22px;overflow:hidden;margin:4px 0 10px}.seg button{border:0;border-radius:0;min-height:40px}.seg button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);font-weight:700}
+.tbl{width:100%;border-collapse:collapse}.tbl td{padding:2px}.tbl input{margin:0;padding:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom));background:#333;color:#fff;padding:10px 16px;border-radius:12px;z-index:40;font-size:14px}
 </style>
 </head>
 <body>
@@ -62,30 +130,40 @@ input,select{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, doc, onSnapshot, setDoc, writeBatch, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, getDocs, writeBatch, addDoc, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-/* ВСТАВЬТЕ СВОИ ДАННЫЕ: Firebase → шестерёнка → Настройки проекта → Ваши приложения → Веб-приложение (</>) */
 const firebaseConfig = {
   apiKey: "AIzaSyD6BkylVnAh3gWQmARZEHj8o9YSK4J8lOo",
   authDomain: "kerampuls.firebaseapp.com",
   projectId: "kerampuls",
   appId: "1:718382916991:web:c4255adef4d0ecb0dee64a"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ================= данные завода (как в приложении) ================= */
 const DRYERS = [
   {name:"Ева 1", id:"eva1", shelves:252, lap:84, line:1},
   {name:"Ева 2", id:"eva2", shelves:252, lap:114.28, line:2},
   {name:"Ева 3", id:"eva3", shelves:252, lap:84, line:3},
   {name:"Ева 4", id:"eva4", shelves:324, lap:99.5, line:4}
 ];
+const MODEL = d=> d.shelves===252 ? "SACMI EVA 783 · 21 поддон × 12 ярусов" : d.shelves===324 ? "SACMI EVA 983 · 27 поддонов × 12 ярусов" : "SACMI EVA";
+const EVA_MAX = 7.5, PRESS_MAX = 20;
 const FORMATS = {"300x300":15, "600x600":4, "1200x600":2};
 const ROLES = {press:"Прессовщик", glaze:"Оператор глазури", lab:"Лаборант", master:"Мастер смены", chief:"Начальник смены", viewer:"Наблюдатель"};
+const ROLE_CHOICES = ["press","glaze","lab","master","chief"];
+const ST = {run:"Работает", idle:"Простой", off:"Выключен"};
+const QUICK = ["Принято","Нужен мастер","Требуется наладчик","Пошла тестовая полка","Остановка на чистку"];
+const PLACES = ["Линия 1","Линия 2","Линия 3","Линия 4","Другое"];
+const defectsFor = r=> (r==="master"||r==="chief") ? ["Трещина","Скол","Геометрия","Недолив глазури","Сбой печати","Бой"]
+  : r==="glaze" ? ["Недолив глазури","Сбой печати","Скол","Бой"]
+  : r==="lab" ? ["Геометрия","Влажность","Оттенок","Трещина","Скол","Бой"] : ["Трещина","Скол","Геометрия","Бой"];
+const pressPanel = i=> i<=3 ? "кнопочный пульт (старый)" : "сенсорный пульт";
+const isLead = r=> r==="master"||r==="chief";
 
-/* ---------- расчёт (как в приложении) ---------- */
+/* ================= расчёт Евы (как в приложении) ================= */
 const mod = (a,n)=>((a%n)+n)%n;
 const evaDef = d=>({synced:false, refPos:0, refTime:0, running:true, rate:d.shelves/d.lap, fmt:"", tpm:0});
 const pos = (e,now)=> (!e.synced||!e.running) ? e.refPos : e.refPos + (now-e.refTime)/60000*e.rate;
@@ -107,72 +185,107 @@ function retarget(t,old,fresh,c,n,now){
 const toggled = (e,now)=> e.running ? {...e, refPos:pos(e,now), refTime:now, running:false} : {...e, refTime:now, running:true};
 const rated = (e,rate,fmt,tpm,now)=>({...e, refPos:pos(e,now), refTime:now, rate, fmt, tpm});
 
-/* ---------- форматирование ---------- */
+/* ================= форматирование ================= */
 const pad3 = n=>String(n).padStart(3,"0");
 const pad2 = n=>String(n).padStart(2,"0");
 const clock = ms=>{const d=new Date(ms); return pad2(d.getHours())+":"+pad2(d.getMinutes());};
 const fmtDur = sec=>{const t=Math.max(0,Math.ceil(sec)); const h=Math.floor(t/3600), m=Math.floor((t%3600)/60); return h>0? h+" ч "+m+" мин" : m+" мин";};
 const mmss = sec=>{const t=Math.max(0,Math.floor(sec)); return pad2(Math.floor(t/60))+":"+pad2(t%60);};
 const fmtStop = sec=>{const t=Math.max(0,Math.floor(sec)); return t>=60 ? Math.floor(t/60)+" мин "+(t%60)+" с" : t+" с";};
-const rateTxt = r=>r.toFixed(2).replace(".",",");
+const rateTxt = r=>(+r).toFixed(2).replace(".",",");
+const trim = x=>String(+(+x).toFixed(2));
+const num = v=>{ const x=parseFloat(String(v??"").replace(",",".")); return isFinite(x)?x:0; };
 const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dayKey = ts=>{const d=new Date(ts); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();};
 const dayLabel = ts=>{ if(dayKey(ts)===dayKey(Date.now())) return "Сегодня"; if(dayKey(ts)===dayKey(Date.now()-864e5)) return "Вчера"; return new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}); };
-const fmtLabel = f=>f.replace("x","×");
+const fmtLabel = f=>(f||"").replace("x","×");
+const initials = n=>(n||"").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?";
+const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } };
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
 
-/* ---------- состояние ---------- */
-let user=null, role="viewer", nick="", tab="dry", jfilter="all", evsel=0, presses={}, lines={};
-let evas={}, tests=[], journal=[], accepts={}, unsubs=[];
-const root = document.getElementById("root");
+/* ================= смены (как в приложении) ================= */
+const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000;
+const shiftTs=()=>+ls("shift_"+user.uid)||0;
+const onShift=()=>shiftTs()>0&&Date.now()-shiftTs()<MAXSH;
+const brigade=()=>+ls("brigade")||0;
+function sched(){
+  const b=brigade(); if(!b) return null;
+  const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), day0=Math.floor(t.getTime()/86400000);
+  const isDay=h>=8&&h<20, sd=h<8?day0-1:day0, idx=((sd-ANCHOR+1-(b-1))%4+4)%4, mine=isDay?idx===0:idx===1;
+  return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+1-(b-1))%4+4)%4],mine:false};
+}
+const shiftStart=()=>{ const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), d0=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); return (h<8?d0-4*3600000:h<20?d0+3*3600000:d0+15*3600000); };
+
+/* ================= состояние ================= */
+let user=null, role="viewer", nick="", tab=ls("tab")||"dry", evsel=0;
+let presses={}, evas={}, tests=[], journal=[], chat=[], accepts={}, task=null, acks=[], avatars={};
+let unsubs=[], pendPhoto=null, helpPress=0, helpQ="", helpOpen=null, taskOpen=false;
+const root=document.getElementById("root");
 const evaOf = d=> evas[d.id] || evaDef(d);
+const canPress = ()=> role==="press" && onShift();
+const pressOf = i=> presses[i] || {state:"off", eva:0, fmt:"", tpm:0, cpm:0, per:1, pressure:0, pressTs:0, deaer:0, outM2:0, outTs:0, by:"", ts:0};
+const theme = v=>{ if(v===undefined) return ls("theme")||"auto"; ls("theme",v); applyTheme(); };
+function applyTheme(){ const t=theme(); if(t==="auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme",t); }
+applyTheme();
 
-/* ---------- вход ---------- */
+/* ================= вход ================= */
+function roleOf(email){ const l=(email||"").split("@")[0]; for(const r of ["chief","master","press","glaze","lab"]) if(l.startsWith(r)) return r; return "viewer"; }
 function renderLogin(err=""){
+  document.body.className="";
   root.innerHTML = `<div class="login"><h1>КерамПульс</h1><p class="small">Вход для сотрудников</p>
   <input id="lg" placeholder="Логин" autocapitalize="off" autocomplete="username">
   <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password">
   <div class="err">${esc(err)}</div><button class="ok big" id="go">Войти</button></div>`;
   document.getElementById("go").onclick = async ()=>{
     const l=document.getElementById("lg").value.trim().toLowerCase(), p=document.getElementById("pw").value;
-    try{ await signInWithEmailAndPassword(auth, l+"@keram.app", p); }
+    try{ await signInWithEmailAndPassword(auth, l.includes("@")?l:l+"@keram.app", p); }
     catch(e){ renderLogin(e.code==="auth/network-request-failed" ? "Нет связи с сервером" : "Неверный логин или пароль"); }
   };
 }
-function roleOf(email){ const l=(email||"").split("@")[0]; for(const r of ["chief","master","press","glaze","lab"]) if(l.startsWith(r)) return r; return "viewer"; }
-
-onAuthStateChanged(auth, u=>{
-  unsubs.forEach(f=>f()); unsubs=[];
-  user=u;
-  if(!u){ renderLogin(); return; }
-  role=roleOf(u.email);
-  unsubs.push(onSnapshot(doc(db,"profiles",u.uid), s=>{
-    nick = s.exists() ? (s.data().nick||"") : "";
-    if(!nick) renderNick(); else { startData(); }
-  }));
-});
 function renderNick(){
   root.innerHTML = `<div class="login"><h2>Как вас подписывать?</h2><p class="small">Имя или ник, без фамилии.</p>
   <input id="nk" maxlength="20" placeholder="Имя или ник"><button class="ok big" id="go">Продолжить</button></div>`;
   document.getElementById("go").onclick = ()=>{ const v=document.getElementById("nk").value.trim(); if(v) setDoc(doc(db,"profiles",user.uid),{nick:v},{merge:true}); };
 }
 let dataStarted=false;
+onAuthStateChanged(auth, u=>{
+  unsubs.forEach(f=>f()); unsubs=[]; dataStarted=false;
+  user=u;
+  if(!u){ renderLogin(); return; }
+  role=roleOf(u.email);
+  unsubs.push(onSnapshot(doc(db,"profiles",u.uid), s=>{
+    nick = s.exists() ? (s.data().nick||"") : "";
+    if(!nick) renderNick(); else startData();
+  }));
+});
+
+/* ================= подписки ================= */
 function startData(){
   if(dataStarted){ render(); return; }
   dataStarted=true;
-  unsubs.push(onSnapshot(collection(db,"presses"), s=>{ presses={}; s.forEach(d=>{ presses[+d.id.replace("p","")]=d.data(); }); render(); }));
-  unsubs.push(onSnapshot(collection(db,"lines"), s=>{ lines={}; s.forEach(d=>{ lines[+d.id.replace("l","")]=d.data(); }); render(); }));
-  unsubs.push(onSnapshot(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd) evas[d.id]={synced:!!x.synced, refPos:+x.refPos||0, refTime:+x.refTime||0, running:x.running!==false, rate:(+x.rate>0.05?+x.rate:dd.shelves/dd.lap), fmt:x.fmt||"", tpm:+x.tpm||0}; }); render(); }));
-  unsubs.push(onSnapshot(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:+x.target, author:x.author||"", exitTs:+x.exitTs||0}); }); render(); }));
-  unsubs.push(onSnapshot(query(collection(db,"chats","journal","messages"),orderBy("ts","desc"),limit(80)), s=>{ journal=s.docs.map(d=>({id:d.id,...d.data()})); render(); }));
-  unsubs.push(onSnapshot(query(collection(db,"accepts"),orderBy("ts","desc"),limit(100)), s=>{ accepts={}; s.forEach(d=>{ const x=d.data(); (accepts[x.msg] ||= []).push(x); }); render(); }));
+  buildShell();
+  const sub=(q,f)=>unsubs.push(onSnapshot(q,f,()=>{}));
+  sub(collection(db,"presses"), s=>{ presses={}; s.forEach(d=>{ const x=d.data(); presses[+d.id.replace("p","")]={state:x.state||"off", eva:+x.eva||0, fmt:x.fmt||"", tpm:num(x.tpm), cpm:num(x.cpm), per:Math.max(1,+x.per||1), pressure:num(x.pressure), pressTs:+x.pressTs||0, deaer:num(x.deaer), outM2:num(x.outM2), outTs:+x.outTs||0, by:x.by||"", ts:+x.ts||0}; }); render(); });
+  sub(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd){ const r=num(x.rate); evas[d.id]={synced:!!x.synced, refPos:num(x.refPos), refTime:+x.refTime||0, running:x.running!==false, rate:(r>0.05&&r<30)?r:dd.shelves/dd.lap, fmt:x.fmt||"", tpm:num(x.tpm)}; } }); render(); });
+  sub(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:num(x.target), author:x.author||"", exitTs:+x.exitTs||0}); }); render(); });
+  sub(query(collection(db,"chats","journal","messages"),orderBy("ts","desc"),limit(100)), s=>{ journal=s.docs.map(d=>({id:d.id,pending:d.metadata.hasPendingWrites,...d.data()})); render(); });
+  sub(query(collection(db,"chats","general","messages"),orderBy("ts","desc"),limit(80)), s=>{ chat=s.docs.map(d=>({id:d.id,pending:d.metadata.hasPendingWrites,...d.data()})).reverse(); render(true); });
+  sub(query(collection(db,"accepts"),orderBy("ts","desc"),limit(150)), s=>{ accepts={}; s.forEach(d=>{ const x=d.data(); (accepts[x.msg] ||= []).push(x); }); render(); });
+  sub(doc(db,"config","shift_task"), s=>{ const x=s.exists()?s.data():null; task=(x&&(x.text||"").trim())?{text:x.text, by:x.by||"", ts:+x.ts||0, photo:x.photo||"", thumb:x.thumb||""}:null; subAcks(); render(); });
+  sub(collection(db,"avatars"), s=>{ avatars={}; s.forEach(d=>{ const x=d.data(); if(x.img) avatars[d.id]=x.img; }); render(); });
+}
+let ackUnsub=null, ackTs=null;
+function subAcks(){
+  const ts=task?task.ts:null; if(ts===ackTs) return; ackTs=ts;
+  if(ackUnsub){ ackUnsub(); ackUnsub=null; } acks=[];
+  if(ts) ackUnsub=onSnapshot(query(collection(db,"acks"),where("task","==",ts)), s=>{ acks=s.docs.map(d=>d.data().uid); render(); });
 }
 
-/* ---------- запись ---------- */
-const jcol = ()=>collection(db,"chats","journal","messages");
-const log = (text,type="sys",tag="")=> addDoc(jcol(), {uid:user.uid, author:nick, text, ts:Date.now(), type, tag, role});
+/* ================= запись ================= */
+const send=(ch,text,type="msg",tag="",extra={})=> addDoc(collection(db,"chats",ch,"messages"), {uid:user.uid, author:nick, text, ts:Date.now(), type, tag, role, ...extra});
+const log=(text,type="sys",tag="")=> send("journal",text,type,tag);
 const evaMap = e=>({synced:e.synced, refPos:e.refPos, refTime:e.refTime, running:e.running, rate:e.rate, fmt:e.fmt, tpm:e.tpm});
 const testMap = t=>({id:t.id, dryer:t.dryer, design:t.design, testShelf:t.testShelf, target:t.target, author:t.author, exitTs:t.exitTs||0});
-
 function doFix(d,c){
   const now=Date.now(), old=evaOf(d), ne=evaSynced(old,c,d.shelves,now), b=writeBatch(db);
   b.set(doc(db,"evas",d.id), evaMap(ne));
@@ -185,14 +298,14 @@ function doToggle(d){
   log(ne.running ? `${d.name}: линия пошла, простой ${fmtStop((now-old.refTime)/1000)} — ${nick}` : `${d.name}: ЛИНИЯ СТОИТ — ${nick}`);
 }
 function doSpeed(d,rate,fmt,tpm){
-  const now=Date.now(); setDoc(doc(db,"evas",d.id), evaMap(rated(evaOf(d),rate,fmt,tpm,now)));
+  setDoc(doc(db,"evas",d.id), evaMap(rated(evaOf(d),rate,fmt,tpm,Date.now())));
   log(`${d.name}: скорость ${rateTxt(rate)} полок в минуту, круг ${fmtDur(d.shelves/rate*60)}${fmt?", формат "+fmtLabel(fmt):""} — ${nick}`);
 }
 function doAdd(d,name,shelf){
   const now=Date.now(), old=evaOf(d), ne=evaSynced(old,shelf,d.shelves,now), b=writeBatch(db);
   b.set(doc(db,"evas",d.id), evaMap(ne));
   tests.filter(t=>t.dryer===d.name).forEach(t=>b.set(doc(db,"tests",String(t.id)), testMap(retarget(t,old,ne,shelf,d.shelves,now))));
-  const nt={id:now, dryer:d.name, design:name, testShelf:shelf, target:ne.refPos+d.shelves, author:nick};
+  const nt={id:now, dryer:d.name, design:name, testShelf:shelf, target:ne.refPos+d.shelves, author:nick, exitTs:0};
   b.set(doc(db,"tests",String(nt.id)), testMap(nt)); b.commit();
   log(`${d.name}: поставлен тест «${name}», полка ${pad3(shelf)} — ${nick}`);
 }
@@ -208,11 +321,70 @@ function doDone(t){
   log(`Вышел на глазурь: тест «${t.design}», ${t.dryer} в ${clock(now)}${t.exitTs?", с выхода из Евы прошло "+fmtStop((now-t.exitTs)/1000):""}`, "lap", "Вышел на глазурь");
 }
 function doAccept(m){ setDoc(doc(db,"accepts",m.id+"_"+role), {msg:m.id, role, uid:user.uid, nick, ts:Date.now()}); }
+function pressMap(p,now){ return {state:p.state, eva:p.eva, fmt:p.fmt, tpm:p.tpm, cpm:p.cpm, per:p.per, pressure:p.pressure, pressTs:p.pressure>0?now:0, deaer:p.deaer||0, outM2:p.outM2||0, outTs:p.outTs||0, by:nick, ts:now}; }
+function savePress(id,p,quiet){
+  const now=Date.now(), b=writeBatch(db);
+  b.set(doc(db,"presses","p"+id), pressMap(p,now));
+  const tps=FORMATS[p.fmt]||0;
+  if(p.state==="run"&&p.eva>=1&&p.eva<=4&&p.tpm>0&&tps>0){
+    const d=DRYERS[p.eva-1], all={...presses,[id]:p}; let total=0;
+    Object.values(all).forEach(x=>{ if(x.state==="run"&&x.eva===p.eva&&x.tpm>0) total+=x.tpm; });
+    b.set(doc(db,"evas",d.id), evaMap(rated(evaOf(d),Math.min(total/tps,EVA_MAX),p.fmt,total,now)));
+  }
+  b.commit();
+  if(!quiet) log(`Пресс ${id}: ${ST[p.state]}${p.eva?", на Еву "+p.eva:""}${p.fmt?", "+fmtLabel(p.fmt):""}${p.cpm>0?", "+trim(p.cpm)+" цикл/мин":""}${p.pressure>0?", давление "+trim(p.pressure):""} — ${nick}`);
+}
 
-/* ---------- окна ---------- */
-function modal(title, html, onOk, okText="Сохранить"){
+/* ================= фото: сжатие в браузере ================= */
+function fileToPhoto(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      const sc=max=>{ const k=Math.max(img.width,img.height)/max; const w=k>1?Math.round(img.width/k):img.width, h=k>1?Math.round(img.height/k):img.height; const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); return c; };
+      const big=sc(1280); let q=0.65, full=big.toDataURL("image/jpeg",q).split(",")[1];
+      while(full.length>600000&&q>0.3){ q-=0.1; full=big.toDataURL("image/jpeg",q).split(",")[1]; }
+      const thumb=sc(320).toDataURL("image/jpeg",0.55).split(",")[1];
+      const side=Math.min(img.width,img.height), c=document.createElement("canvas"); c.width=c.height=160;
+      c.getContext("2d").drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,160,160);
+      const avatar=c.toDataURL("image/jpeg",0.7).split(",")[1];
+      URL.revokeObjectURL(url); res({full,thumb,avatar});
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(); };
+    img.src=url;
+  });
+}
+function pickPhoto(cb){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; try{ cb(await fileToPhoto(f)); }catch(e){ toast("Не удалось прочитать фото"); } };
+  inp.click();
+}
+async function savePhoto(p){
+  const ref=doc(collection(db,"photos"));
+  await setDoc(ref,{full:p.full, uid:user.uid, nick, ts:Date.now()});
+  return ref.id;
+}
+const imgSrc = b=>"data:image/jpeg;base64,"+b;
+function viewPhoto(id,thumb){
+  const v=document.createElement("div"); v.className="viewer";
+  v.innerHTML=`<img src="${imgSrc(thumb)}"><span>Загружаю…</span>`;
+  v.onclick=()=>v.remove(); document.body.appendChild(v);
+  if(!id){ v.querySelector("span").textContent="Нажмите, чтобы закрыть"; return; }
+  getDoc(doc(db,"photos",id)).then(s=>{ const f=s.exists()?s.data().full:null;
+    if(f){ v.querySelector("img").src=imgSrc(f); v.querySelector("span").textContent="Нажмите, чтобы закрыть"; }
+    else v.querySelector("span").textContent="Полное фото удалено (старше 30 дней) — показано превью";
+  }).catch(()=>{ v.querySelector("span").textContent="Нет связи — показано превью"; });
+}
+const CLIP_PATH=`<path d="M16.5,6v11.5c0,2.21 -1.79,4 -4,4s-4,-1.79 -4,-4V5c0,-1.38 1.12,-2.5 2.5,-2.5s2.5,1.12 2.5,2.5v10.5c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1V6H10v9.5c0,1.38 1.12,2.5 2.5,2.5s2.5,-1.12 2.5,-2.5V5c0,-2.21 -1.79,-4 -4,-4S7,2.79 7,5v12.5c0,3.04 2.46,5.5 5.5,5.5s5.5,-2.46 5.5,-5.5V6h-1.5z"/>`;
+const CLIP=`<svg viewBox="0 0 24 24">${CLIP_PATH}</svg>`, CLIPS=`<svg class="ic" viewBox="0 0 24 24">${CLIP_PATH}</svg>`;
+const avatarHtml=(uid,name,size=40,act="")=> avatars[uid] ? `<img class="av" src="${imgSrc(avatars[uid])}" style="width:${size}px;height:${size}px" ${act}>` : `<div class="av" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px" ${act}>${esc(initials(name))}</div>`;
+function attachPreview(ov,set){
+  ov.querySelector("#ph").onclick=()=>pickPhoto(p=>{ set(p); ov.querySelector("#pp").innerHTML=`<span class="pend"><img src="${imgSrc(p.thumb)}"><b>✕</b></span>`; ov.querySelector("#pp b").onclick=()=>{ set(null); ov.querySelector("#pp").innerHTML=""; }; });
+}
+
+/* ================= окна ================= */
+function modal(title, html, onOk, okText="Сохранить", extraBtn=""){
   const ov=document.createElement("div"); ov.className="ov";
-  ov.innerHTML=`<div class="md"><h3>${title}</h3>${html}<div class="row"><button id="mc">Отмена</button>${onOk?`<button class="ok" id="mo">${okText}</button>`:""}</div></div>`;
+  ov.innerHTML=`<div class="md"><h3>${title}</h3>${html}<div class="acts">${extraBtn}<button id="mc">${onOk?"Отмена":"Закрыть"}</button>${onOk?`<button class="ok" id="mo">${okText}</button>`:""}</div></div>`;
   document.body.appendChild(ov);
   const close=()=>ov.remove();
   ov.querySelector("#mc").onclick=close;
@@ -220,14 +392,15 @@ function modal(title, html, onOk, okText="Сохранить"){
   if(onOk) ov.querySelector("#mo").onclick=()=>{ if(onOk(ov)!==false) close(); };
   return ov;
 }
+const irow=(l,v,c="")=>`<div class="irow"><span>${l}</span><b ${c?`style="color:${c}"`:""}>${v}</b></div>`;
 function dlgFix(d){
   modal(`${d.name}: какая полка сейчас на загрузке?`, `<input id="v" type="number" inputmode="numeric" placeholder="1–${d.shelves}">`, ov=>{
     const c=parseInt(ov.querySelector("#v").value,10); if(!(c>=1&&c<=d.shelves)) return false; doFix(d,c);
   }, "Пересчитать");
 }
 function dlgAdd(){
-  modal("Новый тест", `<select id="d">${DRYERS.map(d=>`<option value="${d.id}">${d.name}</option>`).join("")}</select>
-  <input id="n" placeholder="Название теста (например: дизайн 001, брак)"><input id="s" type="number" inputmode="numeric" placeholder="Полка, которая сейчас на загрузке">`, ov=>{
+  modal("Новый тест", `<select id="d">${DRYERS.map((d,i)=>`<option value="${d.id}" ${evsel===i+1?"selected":""}>${d.name}</option>`).join("")}</select>
+  <input id="n" placeholder="Название теста (дизайн 001, брак…)"><input id="s" type="number" inputmode="numeric" placeholder="Полка, которая сейчас на загрузке">`, ov=>{
     const d=DRYERS.find(x=>x.id===ov.querySelector("#d").value), n=ov.querySelector("#n").value.trim(), s=parseInt(ov.querySelector("#s").value,10);
     if(!n||!(s>=1&&s<=d.shelves)) return false; doAdd(d,n,s);
   }, "Поставить");
@@ -236,16 +409,16 @@ function dlgSpeed(d){
   const e=evaOf(d); let fmt=e.fmt, byLap=e.tpm<=0;
   const ov=modal(`${d.name}: скорость`, `<div class="small">Формат плитки</div><div class="fm" id="fm">
   <button data-f="">не задан</button>${Object.keys(FORMATS).map(f=>`<button data-f="${f}">${fmtLabel(f)} · ${FORMATS[f]} на полке</button>`).join("")}</div>
-  <input id="tpm" inputmode="decimal" placeholder="Плиток в минуту (как на Еве)" value="${e.tpm>0?e.tpm:""}">
-  <input id="lap" inputmode="decimal" placeholder="или круг в минутах" value="${+(d.shelves/e.rate).toFixed(2)}"><div id="pv" class="small"></div>`, o=>{
-    const r=calc(); if(!r) return false; doSpeed(d,r,fmt,byLap?0:(parseFloat(o.querySelector("#tpm").value.replace(",","."))||0));
+  <input id="tpm" inputmode="decimal" placeholder="Плиток в минуту (как на Еве)" value="${e.tpm>0?trim(e.tpm):""}">
+  <input id="lap" inputmode="decimal" placeholder="или круг в минутах" value="${trim(d.shelves/e.rate)}"><div id="pv" class="small"></div>`, o=>{
+    const r=calc(); if(!r) return false; doSpeed(d,r,fmt,byLap?0:num(o.querySelector("#tpm").value));
   });
   const calc=()=>{
-    const tpm=parseFloat(ov.querySelector("#tpm").value.replace(",",".")), lap=parseFloat(ov.querySelector("#lap").value.replace(",","."));
-    const tps=FORMATS[fmt]||0; let r=null;
+    const tpm=num(ov.querySelector("#tpm").value), lap=num(ov.querySelector("#lap").value), tps=FORMATS[fmt]||0; let r=null;
     if(byLap){ if(lap>0) r=d.shelves/lap; } else if(tpm>0&&tps>0) r=tpm/tps;
     const pv=ov.querySelector("#pv");
-    if(r&&r>=0.3&&r<=20){ const lp=d.shelves/r; pv.innerHTML=`Скорость: ${rateTxt(r)} полок в минуту, круг ${fmtDur(lp*60)}`+((lp>d.lap*1.4||lp<d.lap*0.6)?`<br><b style="color:var(--warn)">Внимание: круг сильно отличается от обычного (${fmtDur(d.lap*60)}). Проверьте формат и плиток в минуту.</b>`:""); return r; }
+    if(r&&r>EVA_MAX){ pv.innerHTML=`<b style="color:var(--bad)">Так быстро Ева не ходит: по паспорту не больше 7,5 яруса в минуту (круг не короче ${fmtDur(d.shelves/EVA_MAX*60)}). Проверьте цифры.</b>`; return null; }
+    if(r&&r>=0.3){ const lp=d.shelves/r; pv.innerHTML=`Скорость: ${rateTxt(r)} полок в минуту, круг ${fmtDur(lp*60)}`+((lp>d.lap*1.4||lp<d.lap*0.6)?`<br><b style="color:var(--warn)">Внимание: круг сильно отличается от обычного (${fmtDur(d.lap*60)}).</b>`:""); return r; }
     pv.textContent="Выберите формат и введите плиток в минуту, либо время круга"; return null;
   };
   const paint=()=>ov.querySelectorAll("#fm button").forEach(b=>b.classList.toggle("on",b.dataset.f===fmt));
@@ -254,131 +427,403 @@ function dlgSpeed(d){
   ov.querySelector("#lap").oninput=()=>{ byLap=true; calc(); };
   paint(); calc();
 }
+function dlgPress(i){
+  const p={...pressOf(i)}; const marked=p.pressure>0&&p.pressTs>=shiftStart();
+  const chip=(grp,val,txt,on)=>`<button data-g="${grp}" data-v="${val}" class="${on?"on":""}">${txt}</button>`;
+  const ov=modal(`Пресс ${i}`, `<div class="small">Состояние</div><div class="fm">${["run","idle","off"].map(s=>chip("st",s,ST[s],p.state===s)).join("")}</div>
+  <div class="small">Работает на Еву</div><div class="fm">${chip("ev",0,"не задано",!p.eva)}${[1,2,3,4].map(k=>chip("ev",k,"Ева "+k,p.eva===k)).join("")}</div>
+  <div class="small">Формат</div><div class="fm">${chip("fm","","не задан",!p.fmt)}${Object.keys(FORMATS).map(f=>chip("fm",f,fmtLabel(f),p.fmt===f)).join("")}</div>
+  <div class="row"><input id="cpm" inputmode="decimal" placeholder="Циклов в минуту" value="${p.cpm>0?trim(p.cpm):""}"><input id="per" inputmode="numeric" placeholder="Выходов" value="${p.per||1}"></div>
+  <input id="psi" inputmode="decimal" placeholder="Установленное давление, бар" value="${marked?trim(p.pressure):""}">
+  <div id="pv" class="small"></div>`, o=>{
+    const cpm=num(o.querySelector("#cpm").value), per=Math.max(1,parseInt(o.querySelector("#per").value,10)||1), psi=num(o.querySelector("#psi").value);
+    if(cpm>PRESS_MAX) return false;
+    savePress(i,{...p, cpm, per, tpm:cpm*per, pressure:psi});
+  });
+  const upd=()=>{ const cpm=num(ov.querySelector("#cpm").value), per=Math.max(1,parseInt(ov.querySelector("#per").value,10)||1), psi=num(ov.querySelector("#psi").value);
+    ov.querySelector("#pv").innerHTML="Циклы, выходы (плиток за удар), давление в барах.<br>"+(cpm>0?`Итого ${trim(cpm*per)} плиток в минуту<br>`:"")+(cpm>PRESS_MAX?`<b style="color:var(--bad)">Пресс делает не больше 20 циклов в минуту.</b><br>`:"")+(psi>0&&(psi<150||psi>382)?`<b style="color:var(--warn)">Необычное давление: обычно 240–270 бар, максимум 382.</b>`:"Давление только для информации, на расчёт не влияет.");
+    ov.querySelector("#mo").disabled=cpm>PRESS_MAX; };
+  ov.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{ const g=b.dataset.g, v=b.dataset.v;
+    if(g==="st") p.state=v; else if(g==="ev") p.eva=+v; else p.fmt=v;
+    ov.querySelectorAll(`[data-g="${g}"]`).forEach(x=>x.classList.toggle("on",x===b)); });
+  ["cpm","per","psi"].forEach(k=>ov.querySelector("#"+k).oninput=upd); upd();
+}
+function dlgParams(){
+  const ids=[1,2,3,4,5,6].filter(i=>pressOf(i).state!=="off"), list=ids.length?ids:[1,2,3,4,5,6], st=shiftStart();
+  modal("Параметры прессов", `<table class="tbl"><tr class="small"><td>№</td><td>Давл., бар</td><td>Циклы/мин</td><td>Деаэр.</td></tr>${list.map(i=>{const p=pressOf(i); return `<tr><td><b style="font-size:18px">${i}</b></td><td><input data-i="${i}" data-k="a" inputmode="decimal" value="${p.pressure>0&&p.pressTs>=st?trim(p.pressure):""}"></td><td><input data-i="${i}" data-k="c" inputmode="decimal" value="${p.cpm>0?trim(p.cpm):""}"></td><td><input data-i="${i}" data-k="d" inputmode="decimal" value="${p.deaer>0?trim(p.deaer):""}"></td></tr>`;}).join("")}</table>
+  <div class="small" id="pv">Пустые клетки не меняются. Деаэрация необязательна. Обычно давление 240–270 бар.</div>`, o=>{
+    const v=(i,k)=>num(o.querySelector(`[data-i="${i}"][data-k="${k}"]`).value);
+    if(list.some(i=>v(i,"c")>PRESS_MAX)){ o.querySelector("#pv").innerHTML=`<b style="color:var(--bad)">Циклов больше 20 в минуту не бывает.</b>`; return false; }
+    const rows=[];
+    list.forEach(i=>{ const p=pressOf(i), a=v(i,"a"), c=v(i,"c"), d=v(i,"d"); if(a<=0&&c<=0&&d<=0) return;
+      const np={...p, pressure:a>0?a:p.pressure, cpm:c>0?c:p.cpm, tpm:c>0?c*(p.per||1):p.tpm, deaer:d>0?d:p.deaer}; savePress(i,np,true); rows.push([i,np]); });
+    if(rows.length) log(`Параметры прессов (${brigade()?"смена "+brigade():nick}): `+rows.map(([i,p])=>`№${i} — `+[p.pressure>0?trim(p.pressure)+" бар":null, p.cpm>0?trim(p.cpm)+" ц/мин":null, p.deaer>0?"деаэр. "+trim(p.deaer):null].filter(Boolean).join(", ")).join("; ")+` — ${nick}`);
+  }, "Отправить");
+}
+function dlgOutput(){
+  const ov=modal("Выпуск за смену, м²", [1,2,3,4,5,6].map(i=>`<div class="row"><b style="width:80px;flex:none;${pressOf(i).state==="off"?"color:var(--tx2)":""}">Пресс ${i}</b><input data-i="${i}" inputmode="decimal" placeholder="${pressOf(i).state==="off"?"не работал":"м²"}"></div>`).join("")+`<b id="tot">Всего: 0 м²</b>`, o=>{
+    const rows=[1,2,3,4,5,6].map(i=>[i,num(o.querySelector(`[data-i="${i}"]`).value)]).filter(r=>r[1]>0);
+    if(!rows.length) return false;
+    const now=Date.now(), b=writeBatch(db); rows.forEach(([i,m])=>b.set(doc(db,"presses","p"+i),{outM2:m,outTs:now},{merge:true})); b.commit();
+    log(`Выпуск за смену (${brigade()?"смена "+brigade():nick}): `+rows.map(([i,m])=>`№${i} — ${trim(m)} м²`).join("; ")+`; всего ${trim(rows.reduce((s,r)=>s+r[1],0))} м² — ${nick}`);
+  }, "Отправить");
+  ov.querySelectorAll("[data-i]").forEach(x=>x.oninput=()=>{ let t=0; ov.querySelectorAll("[data-i]").forEach(y=>t+=num(y.value)); ov.querySelector("#tot").textContent="Всего: "+trim(t)+" м²"; });
+}
+function dlgBrak(){
+  let place="", defect="", to=new Set(), photo=null; const defs=defectsFor(role);
+  const ov=modal("Сообщить о браке", `<div class="small">Участок</div><div class="fm" id="pl">${PLACES.map(p=>`<button data-v="${p}">${p}</button>`).join("")}</div><input id="po" placeholder="Какой участок" style="display:none">
+  <div class="small">Дефект</div><div class="fm" id="df">${[...defs,"Другое"].map(p=>`<button data-v="${p}">${p}</button>`).join("")}</div><input id="do" placeholder="Какой дефект" style="display:none">
+  <div class="small">Кому адресовано (можно несколько)</div><div class="fm" id="to">${ROLE_CHOICES.map(r=>`<button data-v="${r}">${ROLES[r]}</button>`).join("")}</div>
+  <textarea id="cm" placeholder="Комментарий (по желанию)"></textarea>
+  <div class="row"><button id="ph" style="flex:none">${CLIPS}Прикрепить фото</button><span id="pp"></span></div>
+  <div class="small" id="miss" style="color:var(--warn)"></div>`, o=>{
+    const pf=place==="Другое"?o.querySelector("#po").value.trim():place, df=defect==="Другое"?o.querySelector("#do").value.trim():defect;
+    if(!pf||!df||!to.size) return false;
+    const cm=o.querySelector("#cm").value.trim(), ph=photo;
+    (async()=>{ const pid=ph?await savePhoto(ph):""; send("journal",cm,"brak",`${pf} · ${df}`,{to:ROLE_CHOICES.filter(r=>to.has(r)), ...(ph?{photo:pid,thumb:ph.thumb}:{})}); })();
+  }, "Отправить");
+  const chk=()=>{ const pf=place==="Другое"?ov.querySelector("#po").value.trim():place, df=defect==="Другое"?ov.querySelector("#do").value.trim():defect;
+    const miss=[!pf?"участок":null,!df?"дефект":null,!to.size?"кому":null].filter(Boolean);
+    ov.querySelector("#miss").textContent=miss.length?"Чтобы отправить, выберите: "+miss.join(", "):""; ov.querySelector("#mo").disabled=miss.length>0; };
+  const one=(id,set)=>ov.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{ set(b.dataset.v); ov.querySelectorAll(`#${id} button`).forEach(x=>x.classList.toggle("on",x===b)); chk(); });
+  one("pl",v=>{ place=v; ov.querySelector("#po").style.display=v==="Другое"?"":"none"; });
+  one("df",v=>{ defect=v; ov.querySelector("#do").style.display=v==="Другое"?"":"none"; });
+  ov.querySelectorAll("#to button").forEach(b=>b.onclick=()=>{ const v=b.dataset.v; to.has(v)?to.delete(v):to.add(v); b.classList.toggle("on",to.has(v)); chk(); });
+  ov.querySelector("#po").oninput=chk; ov.querySelector("#do").oninput=chk;
+  attachPreview(ov,p=>photo=p);
+  chk();
+}
+function dlgTask(){
+  let photo=null;
+  const ov=modal("Задание на смену", `<textarea id="tx" placeholder="План выпуска, указания">${esc(task?task.text:"")}</textarea>
+  <div class="row"><button id="ph" style="flex:none">${CLIPS}Прикрепить фото наряда</button><span id="pp"></span></div>`, o=>{
+    const tx=o.querySelector("#tx").value.trim(), ph=photo; if(!tx&&!ph) return false;
+    (async()=>{ const pid=ph?await savePhoto(ph):(task?.photo||"");
+      setDoc(doc(db,"config","shift_task"),{text:tx||"Наряд-задание на фото", by:nick, ts:Date.now(), photo:pid, thumb:ph?ph.thumb:(task?.thumb||"")}); })();
+  }, "Закрепить");
+  attachPreview(ov,p=>photo=p);
+}
+function dlgProfile(){
+  const s=sched();
+  const ov=modal(`<div class="row">${avatarHtml(user.uid,nick,52)}<div style="flex:1;margin-left:10px"><div>${esc(nick)}</div><div class="small">${ROLES[role]}</div></div><button class="txt" id="nm">Изменить</button></div>`,
+  `<div class="row"><button id="av" style="flex:none">${CLIPS}${avatars[user.uid]?"Сменить фото":"Фото профиля"}</button>${avatars[user.uid]?`<button class="txt" id="avd">Убрать</button>`:""}</div>
+  <div class="small" style="margin-top:10px">Тема</div><div class="seg">${[["auto","Авто"],["light","☀ Свет"],["dark","🌙 Тём"]].map(([k,t])=>`<button data-th="${k}" class="${theme()===k?"on":""}">${t}</button>`).join("")}</div>
+  <div class="small">Смена и график</div><div class="seg">${[1,2,3,4].map(b=>`<button data-br="${b}" class="${brigade()===b?"on":""}">${b}</button>`).join("")}</div>
+  ${s?`<div style="margin-bottom:8px">${s.mine?"Сейчас: ":"Сегодня: "}${s.n}</div>`:""}
+  <div class="small">Веб-версия. Уведомления в фоне работают только в приложении для Android.</div>
+  ${role==="press"?`<button class="txt" id="kb" style="margin-top:6px">Загрузить справочник аварий (файл .json)</button>`:""}
+  <button id="so" style="width:100%;margin-top:10px">Выйти</button>`, null);
+  ov.querySelector("#nm").onclick=()=>{ const v=prompt("Имя или ник",nick); if(v&&v.trim()) setDoc(doc(db,"profiles",user.uid),{nick:v.trim().slice(0,20)},{merge:true}); };
+  ov.querySelector("#av").onclick=()=>pickPhoto(p=>{ setDoc(doc(db,"avatars",user.uid),{img:p.avatar, uid:user.uid, ts:Date.now()}); ov.remove(); });
+  ov.querySelector("#avd")?.addEventListener("click",()=>{ deleteDoc(doc(db,"avatars",user.uid)); ov.remove(); });
+  ov.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ theme(b.dataset.th); ov.remove(); dlgProfile(); });
+  ov.querySelectorAll("[data-br]").forEach(b=>b.onclick=()=>{ ls("brigade",b.dataset.br); ov.remove(); render(); dlgProfile(); });
+  ov.querySelector("#kb")?.addEventListener("click",()=>{ const inp=document.createElement("input"); inp.type="file"; inp.accept=".json,application/json,text/plain"; inp.onchange=()=>uploadKb(inp.files[0]); inp.click(); });
+  ov.querySelector("#so").onclick=()=>{ ov.remove(); signOut(auth); };
+}
+function dlgHandOver(){
+  const ov=modal("Сдать смену?", `<p>После этого управление выключится до следующего «Принять».</p>`, ()=>{ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); }, "Сдать смену",
+    role==="press"?`<button id="ob">Сначала выпуск</button>`:"");
+  ov.querySelector("#ob")?.addEventListener("click",()=>{ ov.remove(); dlgOutput(); });
+}
 
-/* ---------- экраны ---------- */
-function evaCard(d){
-  const e=evaOf(d), now=Date.now(), stopped=!e.running, can=role==="press"&&onShift(), ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,e,now)-remSec(b,e,now));
-  const tr = ts.map(t=>{
-    if(t.exitTs) return `<div class="test" style="border:2px solid #42a5f5"><b style="font-size:18px">${esc(t.design)}</b><div style="color:#42a5f5;font-weight:700">🔄 Круг прошёл, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}</div><div class="small">Ждёт выхода на глазурь уже ${fmtStop((now-t.exitTs)/1000)}${t.author?" · поставил "+esc(t.author):""}</div>${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Вышел на глазурь</button>`:""}</div>`;
-    const rem=remSec(t,e,now), arr=leftSh(t,e,now)<=0.5, col=(stopped||rem<900)?"var(--warn)":"var(--ok)", pr=Math.min(100,Math.max(0,(1-leftSh(t,e,now)/d.shelves)*100));
-    return `<div class="test"><div class="bar"><i style="width:${pr}%;background:${arr?"var(--ok)":col}"></i></div><b style="font-size:18px">${esc(t.design)}</b>
-    ${arr?`<div style="color:var(--ok);font-weight:700;font-size:18px">Полка с тестом на месте!</div>`:`<div class="stats"><div class="stat"><span>Остановка</span><b style="color:${col}">${stopped?"—":clock(now+rem*1000)}</b></div><div class="stat"><span>Осталось</span><b style="color:${col}">${fmtDur(rem)}</b></div><div class="stat"><span>Полка</span><b>${pad3(t.testShelf)}</b></div></div><div class="small">ещё ${Math.ceil(leftSh(t,e,now))} полок</div>`}
-    ${t.author?`<div class="small">Поставил: ${esc(t.author)}</div>`:""}
-    ${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Круг прошёл</button>`:""}</div>`;
-  }).join("");
-  return `<div class="card ${stopped?"stop":""}">${stopped?`<div class="banner"><span>⏸ ЛИНИЯ СТОИТ</span><span data-stop="${d.id}">простой ${mmss((now-e.refTime)/1000)}</span></div>`:""}
-  <div class="in"><div class="row"><h2>${d.name}</h2><span class="small">→ глазурь ${d.line}</span><span class="sp"></span>${e.fmt?`<span class="small">${fmtLabel(e.fmt)}</span>`:""}</div>
-  <div class="stats"><div class="stat"><span>На загрузке</span><b>${e.synced?pad3(shelfNow(e,now,d.shelves)):"—"}</b></div><div class="stat"><span>Скорость</span><b>${rateTxt(e.rate)} пол/мин</b></div><div class="stat"><span>Круг</span><b>${fmtDur(d.shelves/e.rate*60)}</b></div></div>
-  ${e.synced?"":`<div class="small">Положение неизвестно: нажмите «Поправить полку»</div>`}
-  ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
-  <div class="row" style="margin-top:6px"><button data-act="fix" data-d="${d.id}">Поправить полку</button><button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
-  ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}`:""}
-  <div style="margin-top:8px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
+/* ================= каркас ================= */
+function buildShell(){
+  root.innerHTML=`<div id="hdr"></div><div id="bar"></div><main id="main"></main>
+  <div id="comp"><div id="cpend"></div><div class="qp">${QUICK.map(q=>`<button data-q="${esc(q)}">${q}</button>`).join("")}</div>
+  <div class="in"><button class="clip" id="cclip" title="Прикрепить фото">${CLIP}</button><input type="text" id="ctext" placeholder="Сообщение" maxlength="500"><button class="ok" id="csend" style="flex:none;width:52px;height:52px;border-radius:50%;padding:0">➤</button></div></div>
+  <nav id="nav"></nav>`;
+  const ct=document.getElementById("ctext");
+  const sendNow=async()=>{ const t=ct.value.trim(), ph=pendPhoto; if(!t&&!ph) return; ct.value=""; pendPhoto=null; drawPend();
+    const pid=ph?await savePhoto(ph):""; send("general",t,"msg","",ph?{photo:pid,thumb:ph.thumb}:{}); };
+  document.getElementById("csend").onclick=sendNow;
+  ct.onkeydown=e=>{ if(e.key==="Enter") sendNow(); };
+  document.getElementById("cclip").onclick=()=>pickPhoto(p=>{ pendPhoto=p; drawPend(); });
+  document.querySelectorAll("#comp [data-q]").forEach(b=>b.onclick=()=>send("general",b.dataset.q));
+}
+function drawPend(){ const el=document.getElementById("cpend"); if(!el) return;
+  el.innerHTML=pendPhoto?`<span class="pend"><img src="${imgSrc(pendPhoto.thumb)}"><b>✕</b></span>`:"";
+  el.querySelector("b")?.addEventListener("click",()=>{ pendPhoto=null; drawPend(); }); }
+
+/* ================= экраны ================= */
+function headerHtml(){
+  let left;
+  if(onShift()) left=`<div class="st-on" data-act="handover"><b><span class="dotg"></span>${brigade()?"Смена "+brigade():"На смене"} · с ${clock(shiftTs())}</b><small>нажмите, чтобы сдать смену</small></div>`;
+  else { const s=sched(); left=`<div class="st-off"><div style="flex:1;min-width:0"><b>Не на смене</b><small>${!s?"укажите смену в профиле":s.mine?"сейчас ваша: "+s.n:"сегодня: "+s.n}</small></div><button class="ok" data-act="accept_shift" style="flex:none">Принять</button></div>`; }
+  return left+avatarHtml(user.uid,nick,40,'data-act="menu"');
 }
 const pendBrak=()=>journal.filter(m=>m.type==="brak"&&(m.to||[]).includes(role)&&Date.now()-m.ts<86400000&&!(accepts[m.id]||[]).some(a=>a.role===role));
 function brakBar(){
   if(!onShift()) return ""; const p=pendBrak(); if(!p.length) return ""; const m=p[0];
   return `<div class="bb" data-act="tab" data-k="jr"><div style="flex:1"><b>⚠ БРАК ждёт вас${p.length>1?" ("+p.length+")":""}</b><div style="font-size:12px">${esc(m.tag||"")} · ${esc(m.author||"")}, ${clock(m.ts)}</div></div><button data-act="accept" data-m="${m.id}">Принял</button></div>`;
 }
-function journalHtml(){
-  const f=jfilter, list=journal.filter(m=>f==="all"||(f==="brak"&&m.type==="brak")||(f==="lap"&&m.type==="lap")||(f==="stop"&&m.type==="sys"&&/СТОИТ|пошла/.test(m.text||"")));
-  let out="", last=null;
-  for(const m of list){
-    const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
-    if(m.type==="lap") out+=`<div class="lap"><b>${(m.text||"").startsWith("Вышел на глазурь")?"✅ ВЫШЕЛ НА ГЛАЗУРЬ":"🔄 КРУГ ПРОШЁЛ"}</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
-    else if(m.type==="brak"){
-      const acc=accepts[m.id]||[], to=m.to||[], mine=to.includes(role)&&!acc.some(a=>a.role===role);
-      out+=`<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.text?`<div>${esc(m.text)}</div>`:""}
-      ${to.length?`<div class="small">Кому: ${to.map(r=>ROLES[r]||r).join(", ")}</div>`+to.map(r=>{const a=acc.find(x=>x.role===r); return a?`<div style="color:var(--ok);font-weight:700;font-size:13px">✓ ${ROLES[r]}: принял ${esc(a.nick)}, ${clock(a.ts)}</div>`:`<div style="color:var(--warn);font-size:13px">⏳ ${ROLES[r]}: ещё не принял</div>`;}).join(""):""}
-      ${mine?`<button class="ok" style="width:100%;margin-top:8px" data-act="accept" data-m="${m.id}">Принял информацию</button>`:""}
-      <div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
-    } else out+=`<div class="sys">${clock(m.ts)} · ${esc(m.text)}</div>`;
-  }
-  const pend=pendBrak();
-  const pin=pend.length?`<div style="color:#ef4444;font-weight:700;font-size:13px;margin:4px 0">📌 Ждут вашего подтверждения</div>`+pend.map(m=>`<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.text?`<div>${esc(m.text)}</div>`:""}<button class="ok" style="width:100%;margin-top:8px" data-act="accept" data-m="${m.id}">Принял информацию</button><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`).join(""):"";
-  return pin+`<div class="chips">${[["all","Всё"],["brak","Брак"],["lap","Круги"],["stop","Остановки"]].map(([k,t])=>`<button class="${f===k?"on":""}" data-act="jf" data-k="${k}">${t}</button>`).join("")}</div>${out||`<div class="small">Записей нет</div>`}`;
-}
-/* ---------- сушилки: чипы, неактивные свёрнуты ---------- */
+/* --- Сушилки --- */
 const evaActive=d=>(evas[d.id]&&evas[d.id].synced)||tests.some(t=>t.dryer===d.name);
+function evaCard(d){
+  const e=evaOf(d), now=Date.now(), stopped=!e.running, can=canPress(), ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,e,now)-remSec(b,e,now));
+  const feed=[1,2,3,4,5,6].filter(i=>pressOf(i).eva===DRYERS.indexOf(d)+1&&pressOf(i).state!=="off");
+  const tr=ts.map(t=>{
+    if(t.exitTs) return `<div class="test out"><b style="font-size:18px">${esc(t.design)}</b><div style="color:var(--blue);font-weight:700">🔄 Круг прошёл, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}</div><div class="small">Ждёт выхода на глазурь уже ${fmtStop((now-t.exitTs)/1000)}${t.author?" · поставил "+esc(t.author):""}</div>${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Вышел на глазурь</button>`:""}</div>`;
+    const rem=remSec(t,e,now), arr=leftSh(t,e,now)<=0.5, col=(stopped||rem<900)?"var(--warn)":"var(--ok)", pr=Math.min(100,Math.max(0,(1-leftSh(t,e,now)/d.shelves)*100));
+    return `<div class="test"><div class="bar"><i style="width:${pr}%;background:${arr?"var(--ok)":col}"></i></div><b style="font-size:18px">${esc(t.design)}</b>
+    ${arr?`<div style="color:var(--ok);font-weight:700;font-size:18px">Полка с тестом на месте!</div>`:`<div class="stats"><div class="stat"><span>Остановка</span><b style="color:${col}">${stopped?"—":clock(now+rem*1000)}</b></div><div class="stat"><span>Осталось</span><b style="color:${col}">${fmtDur(rem)}</b></div><div class="stat"><span>Полка</span><b>${pad3(t.testShelf)}</b></div></div><div class="small">ещё ${Math.ceil(leftSh(t,e,now))} полок</div>`}
+    ${t.author?`<div class="small">Поставил: ${esc(t.author)}</div>`:""}
+    ${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Круг прошёл</button>`:""}</div>`;
+  }).join("");
+  return `<div class="card ${stopped?"stop":""}">${stopped?`<div class="banner"><span>⏸ ЛИНИЯ СТОИТ</span><span>простой ${mmss((now-e.refTime)/1000)}</span></div>`:""}
+  <div class="in"><div class="row"><h2>${d.name}</h2><span class="small">${feed.length?"← пресс "+feed.join(", ")+" · ":""}→ глазурь ${d.line}</span><span class="sp"></span>${e.fmt?`<span class="small">${fmtLabel(e.fmt)}</span>`:""}</div>
+  <div class="stats"><div class="stat"><span>На загрузке</span><b>${e.synced?pad3(shelfNow(e,now,d.shelves)):"—"}</b></div><div class="stat"><span>Скорость</span><b>${rateTxt(e.rate)} пол/мин</b></div><div class="stat"><span>Круг</span><b>${fmtDur(d.shelves/e.rate*60)}</b></div></div>
+  ${e.synced?"":`<div class="small">Положение неизвестно: нажмите «Поправить полку»</div>`}
+  ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
+  <div class="row" style="margin-top:4px"><button data-act="fix" data-d="${d.id}">Поправить полку</button><button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
+  ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}`:""}
+  <div style="margin-top:6px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
+}
 function dryHtml(){
   const col=d=>!evaActive(d)?"var(--tx2)":(evaOf(d).running?"var(--ok)":"var(--warn)");
-  const chips=`<div class="chips"><button class="${evsel===0?"on":""}" data-act="evsel" data-k="0">Все</button>${DRYERS.map((d,i)=>`<button class="${evsel===i+1?"on":""}" data-act="evsel" data-k="${i+1}"><span class="dot" style="background:${col(d)}"></span> ${d.name}</button>`).join("")}</div>`;
+  const chips=`<div class="chips"><button class="${evsel===0?"on":""}" data-act="evsel" data-k="0">Все</button>${DRYERS.map((d,i)=>`<button class="${evsel===i+1?"on":""}" data-act="evsel" data-k="${i+1}"><span class="dot" style="background:${col(d)}"></span><b>${i+1}</b></button>`).join("")}</div>`;
   let list;
-  if(evsel>0) list=DRYERS[evsel-1]?evaCard(DRYERS[evsel-1]):"";
-  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(d=>`<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">не запущена, нет данных</span>${role==="press"&&onShift()?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}</div>`)].join("");
-  return chips+list;
+  if(evsel>0) list=evaCard(DRYERS[evsel-1]);
+  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(d=>`<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">не запущена, нет данных</span>${canPress()?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}</div>`)].join("");
+  return chips+list+(canPress()?`<button class="ok big" data-act="add">+ Тест</button>`:"");
 }
-/* ---------- Цех ---------- */
-const ST={run:"Работает",idle:"Простой",off:"Выключен"}, stCol=s=>s==="run"?"var(--ok)":s==="idle"?"var(--warn)":"var(--tx2)";
-const shiftStart=()=>{ const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), d0=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); return (h<8?d0-4*3600000:h<20?d0+3*3600000:d0+15*3600000); };
+/* --- Цех --- */
+const LED={run:"#39d353", idle:"#ffb020", off:"#5b6b80"};
+function pressSvg(run,led){
+  const w=run===null?14:30, h=run===null?20:52;
+  return `<svg viewBox="0 0 30 52" width="${w}" height="${h}" style="flex:none"><rect x="0" y="44" width="30" height="8" rx="2" fill="#4a5868"/><rect x="2" y="8" width="4" height="37" fill="#8a97a6"/><rect x="24" y="8" width="4" height="37" fill="#8a97a6"/><rect x="0" y="0" width="30" height="10" rx="3" fill="#8a97a6"/><rect x="8" y="10" width="14" height="6" fill="#e8672a" opacity="${run?1:.4}"/><g class="${run?"ram":""}"><rect x="6" y="17" width="18" height="5" fill="#c4ced8"/></g><rect x="8" y="40" width="14" height="3" fill="${led}"/></svg>`;
+}
+function evaSvg(k,run,led){
+  let up="", dn="";
+  for(let j=-1;j<8;j++){ up+=`<rect x="5" y="${4+j*8}" width="10" height="2" fill="${led}"/>`; dn+=`<rect x="21" y="${4+j*8}" width="10" height="2" fill="${led}"/>`; }
+  return `<svg viewBox="0 0 36 70" width="36" height="92" preserveAspectRatio="none" style="flex:none"><rect width="36" height="70" rx="4" fill="#b9c3ce"/><rect x="3" y="3" width="30" height="56" fill="#1b2b40"/><clipPath id="cp${k}"><rect x="3" y="3" width="30" height="56"/></clipPath><g clip-path="url(#cp${k})"><g class="${run?"shelves":""}">${up}</g><g class="${run?"shelves2":""}">${dn}</g></g><line x1="11" y1="3" x2="11" y2="59" stroke="#5b6b80"/><line x1="25" y1="3" x2="25" y2="59" stroke="#5b6b80"/><rect y="61" width="36" height="9" fill="#4a5868"/>${run?`<circle cx="18" cy="65.5" r="2.5" fill="#ff7a2e"/>`:""}</svg>`;
+}
 function schemeHtml(){
-  const PH=78, ST_=86, TOT=516, EH=114;
+  const now=Date.now(), st=shiftStart(), W=Math.min(document.documentElement.clientWidth-24,720)-20;
+  const pW=W*0.42, gap=46, eX=pW+gap, eW=W-eX, onH=70, offH=34, vG=8, eH=104, eG=10;
+  const pTop=[], pH=[]; let y=0;
+  for(let i=1;i<=6;i++){ pTop[i]=y; pH[i]=pressOf(i).state==="off"?offH:onH; y+=pH[i]+vG; }
+  const total=Math.max(y-vG, 4*eH+3*eG), slot=total/4, eTop=k=>(k-1)*slot+(slot-eH)/2;
   let svg="", nodes="";
   for(let i=1;i<=6;i++){
-    const p=presses[i]||{state:"off",eva:0}, y=(i-1)*ST_+PH/2;
-    if(p.eva>=1&&p.eva<=4){ const e=evas[DRYERS[p.eva-1].id], ey=(p.eva-.5)*TOT/4, run=p.state==="run", c=!run?"var(--tx2)":(e&&!e.running?"var(--warn)":"var(--ok)");
-      svg+=`<path d="M80 ${y} H95 V${ey} H110" stroke="${c}" ${run?'class="flow"':""} />`; }
-    const showP=+p.pressure>0&&+p.pressTs>=shiftStart();
-    nodes+=`<div class="nd" style="left:0;top:${(i-1)*ST_}px;width:26.67%;height:${PH}px;border-color:${stCol(p.state)}" data-act="pinfo" data-k="${i}"><b>Пресс ${i}</b><span style="color:${stCol(p.state)}">${ST[p.state]||"Выключен"}</span>${p.eva?`<span>→ Ева ${p.eva}</span>`:""}${+p.cpm>0&&p.state==="run"?`<span>${+(+p.cpm).toFixed(2)} цикл/мин</span>`:""}${showP?`<span>давл. ${+p.pressure}</span>`:""}</div>`;
+    const p=pressOf(i); if(!(p.eva>=1&&p.eva<=4)) continue;
+    const e=evas[DRYERS[p.eva-1].id], py=pTop[i]+pH[i]/2, ey=eTop(p.eva)+eH/2, bx=pW+gap*(0.22+0.17*(p.eva-1));
+    const run=p.state==="run", stopped=e&&!e.running, c=!run?null:stopped?"#ffb020":"#39d353", d=`M${pW} ${py} H${bx} V${ey} H${eX}`;
+    svg+=`<path class="pipe" d="${d}"/>`+(c?`<path d="${d}" fill="none" stroke="${c}" stroke-opacity=".25" stroke-width="7"/><path class="flowp ${run&&!stopped?"run":""}" d="${d}" stroke="${c}"/>`:"");
+  }
+  for(let i=1;i<=6;i++){
+    const p=pressOf(i), led=LED[p.state]||LED.off;
+    if(p.state==="off") nodes+=`<div class="nd off" data-act="pinfo" data-k="${i}" style="left:0;top:${pTop[i]}px;width:${pW}px;height:${pH[i]}px">${pressSvg(null,led)}<b style="flex:1;font-size:12px">ПРЕСС ${i}</b><span class="led" style="background:${led}"></span></div>`;
+    else { const pr=p.pressure>0&&p.pressTs>=st;
+      nodes+=`<div class="nd" data-act="pinfo" data-k="${i}" style="left:0;top:${pTop[i]}px;width:${pW}px;height:${pH[i]}px;border-color:${led}">${pressSvg(p.state==="run",led)}<div class="tx"><b>ПРЕСС ${i}<span class="led" style="background:${led}"></span></b><div style="color:${led};font-weight:700">${p.eva?"→ Ева "+p.eva:"→ ?"}${p.state==="idle"?" · простой":""}</div><div>${p.fmt?fmtLabel(p.fmt):"формат ?"}${p.cpm>0?" "+trim(p.cpm)+"ц":""}</div><div style="color:${pr?"#dce6f2":"#8a9bb0"}">${pr?"P "+trim(p.pressure)+" бар":"P —"}</div></div></div>`; }
   }
   for(let k=1;k<=4;k++){
-    const d=DRYERS[k-1], e=evas[d.id], ey=(k-.5)*TOT/4, l=lines[k]||{state:"off"}, c=!e||!e.synced?"var(--tx2)":e.running?"var(--ok)":"var(--warn)", lon=l.state!=="off"&&e&&e.synced;
-    svg+=`<path d="M190 ${ey} H220" stroke="${lon?(e.running&&l.state==="run"?"var(--ok)":"var(--warn)"):"var(--tx2)"}" ${lon&&e.running&&l.state==="run"?'class="flow"':""} />`;
-    nodes+=`<div class="nd" style="left:36.67%;top:${ey-EH/2}px;width:26.67%;height:${EH}px;border-color:${c}" data-act="einfo" data-k="${k}"><b>${d.name}</b><span style="color:${c}">${!e||!e.synced?"нет данных":e.running?"идёт":"СТОИТ"}</span><span>${rateTxt(e?e.rate:d.shelves/d.defLapMin)} пол/мин</span><span>тестов: ${tests.filter(t=>t.dryer===d.name&&!t.exitTs).length}</span></div>`;
-    nodes+=`<div class="nd" style="left:73.33%;top:${ey-EH/2}px;width:26.67%;height:${EH}px;border-color:${stCol(l.state)}" data-act="linfo" data-k="${k}"><b>Глазурь ${k}</b><span style="color:${stCol(l.state)}">${ST[l.state]||"Выключен"}</span></div>`;
+    const d=DRYERS[k-1], e=evas[d.id], ee=e||evaDef(d), known=e&&e.synced, led=!known?LED.off:ee.running?LED.run:LED.idle;
+    const tt=tests.filter(t=>t.dryer===d.name&&!t.exitTs).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now))[0], waiting=tests.some(t=>t.dryer===d.name&&t.exitTs);
+    nodes+=`<div class="nd" data-act="einfo" data-k="${k}" style="left:${eX}px;top:${eTop(k)}px;width:${eW}px;height:${eH}px;border:${known?"1.5px solid "+led:"1px solid #34465e"};border-radius:10px">${evaSvg(k,known&&ee.running,led)}<div class="tx"><b style="font-size:14px">ЕВА ${k}<span class="led" style="background:${led}"></span></b>
+    <div style="color:${led};font-weight:700">${!known?"нет данных":ee.running?"идёт":"СТОИТ "+mmss((now-ee.refTime)/1000)}</div>
+    ${known?`<div><span class="big3">${pad3(shelfNow(ee,now,d.shelves))}</span> <span style="color:#8a9bb0">${rateTxt(ee.rate)} яр/м</span></div>${tt&&ee.running?`<div style="color:#ffb020">${esc(tt.design)} стоп ${clock(now+remSec(tt,ee,now)*1000)}</div>`:waiting?`<div style="color:#64b5f6">тест ждёт глазурь</div>`:ee.fmt?`<div style="color:#8a9bb0">${fmtLabel(ee.fmt)}</div>`:""}`:`<div style="color:#8a9bb0">полка —</div>`}</div></div>`;
   }
-  return `<h2 style="margin:4px 0">Цех</h2><div class="small" style="margin-bottom:8px">Пресс → линии → Ева → глазурь и кристалина → накопитель → печь</div><div class="sch" style="height:${TOT}px"><svg viewBox="0 0 300 ${TOT}" preserveAspectRatio="none">${svg}</svg>${nodes}</div>`;
+  return (canPress()?`<div class="row" style="margin-bottom:8px"><button data-act="params">⚙ Параметры прессов</button><button data-act="output">📦 Выпуск за смену</button></div>`:"")+
+  `<div class="panel"><div class="hd"><span>ЦЕХ · ПРЕССЫ → СУШИЛКИ</span><span style="color:#8a9bb0">${clock(now)}</span></div>
+  <div class="lg"><span><span class="led" style="background:${LED.run}"></span>работа</span><span><span class="led" style="background:${LED.idle}"></span>простой/стоит</span><span><span class="led" style="background:${LED.off}"></span>выкл</span></div>
+  <div class="sch" style="height:${total}px;width:${W}px"><svg class="pipes" width="${W}" height="${total}">${svg}</svg>${nodes}</div></div>
+  <div class="small" style="margin-top:6px">Нажмите на пресс или Еву, чтобы увидеть всё по ним.</div>`;
 }
-function infoModal(title,lines_){ modal(title,`<div style="white-space:pre-line">${lines_}</div>`,null); }
-/* ---------- смены (день 08–20, ночь 20–08, Екатеринбург UTC+5) ---------- */
-const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000;
-const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } };
-const lead=()=>role==="master"||role==="chief";
-const shiftTs=()=>+ls("shift_"+user.uid)||0;
-const onShift=()=>lead()||(shiftTs()>0&&Date.now()-shiftTs()<MAXSH);
-const brigade=()=>+ls("brigade")||0;
-function sched(){
-  const b=brigade(); if(!b) return null;
-  const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), day0=Math.floor(t.getTime()/86400000);
-  const isDay=h>=8&&h<20, sd=h<8?day0-1:day0, idx=((sd-ANCHOR+1-(b-1))%4+4)%4, mine=isDay?idx===0:idx===1;
-  return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+1-(b-1))%4+4)%4],mine:false};
+function pressInfo(i){
+  const p=pressOf(i), st=shiftStart(), tps=FORMATS[p.fmt]||0;
+  const ov=modal(`<span class="led" style="background:${LED[p.state]};width:12px;height:12px"></span> Пресс ${i}`,
+    irow("Состояние",ST[p.state],p.state==="run"?"var(--ok)":p.state==="idle"?"var(--warn)":"")+irow("Пульт",pressPanel(i))+
+    irow("Работает на",p.eva?`Ева ${p.eva} → глазурь ${p.eva}`:"не задано")+irow("Формат",p.fmt?`${fmtLabel(p.fmt)}, ${tps} плиток на полке`:"не задан")+
+    irow("Циклов в минуту",p.cpm>0?trim(p.cpm):"не указано")+irow("Выходов (плиток за удар)",p.cpm>0?p.per:"—")+irow("Плиток в минуту",p.tpm>0?trim(p.tpm):"—")+
+    irow("Полок в минуту на Еву",p.tpm>0&&tps?rateTxt(p.tpm/tps):"—")+irow("Установленное давление",p.pressure>0&&p.pressTs>=st?`${trim(p.pressure)} бар (отмечено в ${clock(p.pressTs)})`:"не отмечено в эту смену")+
+    (p.deaer>0?irow("Деаэрация",trim(p.deaer)):"")+irow("Выпуск за смену",p.outM2>0&&p.outTs>=st?trim(p.outM2)+" м²":p.outM2>0?"прошлая смена: "+trim(p.outM2)+" м²":"—")+
+    (p.by?irow("Последнее изменение",`${esc(p.by)}, ${clock(p.ts)}`):"")+(canPress()?`<button class="ok big" id="ed" style="margin-top:12px">Изменить пресс</button>`:""), null);
+  ov.querySelector("#ed")?.addEventListener("click",()=>{ ov.remove(); dlgPress(i); });
 }
-function shiftBar(){
-  if(lead()) return "";
-  const s=sched();
-  if(onShift()) return `<div class="sb on">🟢 На смене с ${new Date(shiftTs()).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}${brigade()?" · смена "+brigade():""}<button data-act="handover">Сдать смену</button></div>`;
-  const hint=!s?"Укажите свою смену (1–4) (кружок вверху справа)":s.mine?"По графику сейчас ваша смена: "+s.n:"Сегодня по графику: "+s.n;
-  return `<div class="sb off"><div><b>Вы не на смене</b><div class="small">${hint}</div></div><button class="ok" data-act="accept_shift">Принять смену</button></div>`;
+function evaInfo(k){
+  const d=DRYERS[k-1], e=evas[d.id], ee=e||evaDef(d), known=e&&e.synced, now=Date.now();
+  const ps=[1,2,3,4,5,6].filter(i=>pressOf(i).eva===k);
+  const ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now));
+  modal(`<span class="led" style="background:${!known?LED.off:ee.running?LED.run:LED.idle};width:12px;height:12px"></span> ${d.name}`,
+    irow("Модель",MODEL(d))+irow("Состояние",!known?"нет данных":ee.running?"идёт":"СТОИТ, простой "+mmss((now-ee.refTime)/1000),known&&!ee.running?"var(--warn)":"")+
+    irow("На загрузке",known?`полка ${pad3(shelfNow(ee,now,d.shelves))} из ${d.shelves}`:"неизвестно")+
+    (known?irow("Скорость",rateTxt(ee.rate)+" пол/мин")+irow("Круг",`${fmtDur(d.shelves/ee.rate*60)} (быстрее ${fmtDur(d.shelves/EVA_MAX*60)} не бывает)`)+(ee.fmt?irow("Формат",fmtLabel(ee.fmt)):"")+(ee.tpm>0?irow("Плиток в минуту",trim(ee.tpm)):""):"")+
+    irow("Прессы",ps.length?ps.map(n=>{const p=pressOf(n); return `№${n}: ${ST[p.state].toLowerCase()}${p.cpm>0?", "+trim(p.cpm)+" ц/мин":""}`;}).join("\n"):"не заданы")+irow("Дальше","глазурь "+k)+
+    `<h3 style="margin:12px 0 4px">${ts.length?"Тесты ("+ts.length+")":"Тестов нет"}</h3>`+ts.map(t=>`<div class="test"><b>${esc(t.design)}</b><div>${t.exitTs?`Полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}, ждёт глазурь ${fmtStop((now-t.exitTs)/1000)}`:!known?`Полка ${pad3(t.testShelf)}`:!ee.running?`Полка ${pad3(t.testShelf)}, линия стоит, осталось ${Math.ceil(leftSh(t,ee,now))} полок`:`Полка ${pad3(t.testShelf)}, остановка в ${clock(now+remSec(t,ee,now)*1000)}, через ${fmtDur(remSec(t,ee,now))}`}</div><div class="small">Поставил ${esc(t.author||"—")} в ${clock(t.id)}</div></div>`).join(""), null);
 }
-function render(){
-  if(!user||!nick) return;
-  const initials=nick.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?";
-  root.innerHTML=`<header><h1>КерамПульс</h1><div class="me" data-act="menu">${esc(initials)}</div></header>${shiftBar()}${brakBar()}
-  <main>${tab==="dry"?dryHtml()+(role==="press"&&onShift()?`<button class="ok big" data-act="add">+ Тест</button>`:""):tab==="sch"?schemeHtml():journalHtml()}</main>
-  <nav><button class="${tab==="dry"?"on":""}" data-act="tab" data-k="dry">🔥<br>Сушилки</button><button class="${tab==="sch"?"on":""}" data-act="tab" data-k="sch">🧭<br>Цех</button><button class="${tab==="jr"?"on":""}" data-act="tab" data-k="jr">📋<br>Журнал</button></nav>`;
+/* --- Чат --- */
+function taskHtml(){
+  const t=task&&Date.now()-task.ts<12*3600000?task:null;
+  if(!t) return isLead(role)?`<button style="width:100%;margin-bottom:8px" data-act="task_edit">📌 Задать задание на смену</button>`:"";
+  const acked=acks.includes(user.uid);
+  if(!taskOpen) return `<div class="task ${acked?"acked":""}" data-act="task_open"><div class="row"><span>📌</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${acked?"":"font-weight:700"}">${t.thumb?"🖼 ":""}${esc(t.text)}</span>${acked?`<b style="color:var(--ok);padding:8px">✓</b>`:`<button class="txt" data-act="task_ack">Ознакомлен</button>`}</div></div>`;
+  return `<div class="task" data-act="task_close"><b>📌 Задание на смену</b><div>${esc(t.text)}</div>${t.thumb?`<img class="ph" src="${imgSrc(t.thumb)}" data-act="photo" data-p="${t.photo}">`:""}
+  <div class="small">${esc(t.by)} · ${clock(t.ts)} · ознакомились: ${acks.length}</div>
+  <div class="row" style="margin-top:6px">${acked?`<b style="color:var(--ok)">✓ Вы ознакомлены</b>`:`<button class="ok" style="flex:none" data-act="task_ack">Ознакомлен</button>`}<span class="sp"></span>${isLead(role)?`<button class="txt" data-act="task_edit">Изменить</button><button class="txt" style="color:var(--bad)" data-act="task_del">Снять</button>`:""}</div></div>`;
 }
+function chatHtml(){
+  let out="", last=null;
+  for(const m of chat){
+    const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
+    const mine=m.uid===user.uid, lead=isLead(m.role);
+    out+=`<div class="mrow ${mine?"me":""}">${mine?"":avatarHtml(m.uid,m.author,32)}<div class="bub ${lead?"lead":""}">${lead?`<div class="au l">★ ${ROLES[m.role]} · ${esc(m.author)}</div>`:mine?"":`<div class="au">${esc(m.author)}</div>`}
+    ${m.thumb?`<img class="ph" src="${imgSrc(m.thumb)}" data-act="photo" data-p="${m.photo||""}">`:""}${m.text?`<div>${esc(m.text)}</div>`:""}<div class="tm">${clock(m.ts)}${mine?(m.pending?" ⏳":" ✓"):""}</div></div></div>`;
+  }
+  return (isLead(role)?`<div class="row" style="justify-content:flex-end"><button class="txt" data-act="clear_chat">🗑 Очистить</button></div>`:"")+taskHtml()+`<div class="msgs">${out||`<div class="small" style="text-align:center;margin-top:30vh">Сообщений пока нет</div>`}</div>`;
+}
+/* --- Журнал --- */
+function brakCard(m,pinned){
+  const acc=accepts[m.id]||[], to=m.to||[], mine=to.includes(role)&&!acc.some(a=>a.role===role);
+  return `<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.thumb?`<img class="ph" src="${imgSrc(m.thumb)}" data-act="photo" data-p="${m.photo||""}">`:""}${m.text?`<div>${esc(m.text)}</div>`:""}
+  ${!pinned&&to.length?`<div class="small">Кому: ${to.map(r=>ROLES[r]||r).join(", ")}</div>`+to.map(r=>{const a=acc.find(x=>x.role===r); return a?`<div style="color:var(--ok);font-weight:700;font-size:13px">✓ ${ROLES[r]}: принял ${esc(a.nick)}, ${clock(a.ts)}</div>`:`<div style="color:var(--warn);font-size:13px">⏳ ${ROLES[r]}: ещё не принял</div>`;}).join(""):""}
+  ${mine?`<button class="ok" style="width:100%;margin-top:8px" data-act="accept" data-m="${m.id}">Принял информацию</button>`:""}
+  <div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+}
+function journalHtml(){
+  let out="", last=null;
+  for(const m of [...journal].reverse()){
+    const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
+    if(m.type==="lap") out+=`<div class="lap"><b class="t">${(m.text||"").startsWith("Вышел на глазурь")?"✅ ВЫШЕЛ НА ГЛАЗУРЬ":"🔄 КРУГ ПРОШЁЛ"}</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+    else if(m.type==="brak") out+=brakCard(m,false);
+    else out+=`<div class="sys">${clock(m.ts)} · ${esc(m.text)}</div>`;
+  }
+  const pend=pendBrak();
+  return (isLead(role)?`<div class="row" style="justify-content:flex-end"><button class="txt" data-act="clear_jr">🗑 Очистить журнал</button></div>`:"")+
+    (pend.length?`<div style="color:var(--bad);font-weight:700;font-size:13px;margin:4px 0">📌 Ждут вашего подтверждения</div>`+pend.map(m=>brakCard(m,true)).join(""):"")+
+    (out||`<div class="small">Записей нет</div>`)+`<button class="fab" data-act="brak">⚠ Брак</button>`;
+}
+/* --- Помощь (только прессовщики) --- */
+let kb=null, kbNames={}, kbState="", fixes={}, fixUnsub=null;
+async function loadKb(){
+  kbState="loading"; render();
+  try{
+    const idx=await getDoc(doc(db,"kb","index"));
+    if(!idx.exists()){ kbState="empty"; render(); return; }
+    const srcs=idx.data().sources||{}, ids=[]; kbNames={};
+    for(const [k,v] of Object.entries(srcs)){ kbNames[k]=v.name||k; for(let n=0;n<(v.parts||0);n++) ids.push(k+"_"+n); }
+    const docs=await Promise.all(ids.map(id=>getDoc(doc(db,"kb",id))));
+    kb=[]; docs.forEach(s=>{ if(!s.exists()) return; const x=s.data(); (x.items||[]).forEach(it=>kb.push({src:x.src,...it})); });
+    kbState="ok";
+  }catch(e){ kbState="error"; }
+  render();
+}
+async function uploadKb(file){
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text()), index={}; let total=0;
+    for(const [k,s] of Object.entries(data.sources)){
+      const items=s.items.map(o=>({c:o.c||"",t:o.t||"",k:o.k||"",d:o.d||"",s:o.s||""}));
+      const parts=[]; for(let i=0;i<items.length;i+=100) parts.push(items.slice(i,i+100));
+      await Promise.all(parts.map((p,n)=>setDoc(doc(db,"kb",k+"_"+n),{src:k,n,items:p})));
+      index[k]={name:s.name||k,parts:parts.length}; total+=items.length;
+    }
+    await setDoc(doc(db,"kb","index"),{sources:index,ts:Date.now()});
+    kb=null; kbState=""; toast("Справочник загружен: "+total+" аварий"); render();
+  }catch(e){ toast("Ошибка файла или правил базы"); }
+}
+const kbSources=p=> p>=1&&p<=3?["old"]:p>=4&&p<=6?["touch","ph620"]:["old","touch","ph620"];
+function helpFound(){
+  const q=helpQ.trim().toLowerCase(); if(!q||!kb) return [];
+  const pool=kb.filter(a=>kbSources(helpPress).includes(a.src));
+  if(/^\d+$/.test(q)){ const code=q.padStart(4,"0"); const ex=pool.filter(a=>a.c===code); return (ex.length?ex:pool.filter(a=>a.c.startsWith(q)||a.c.endsWith(q))).slice(0,60); }
+  const ws=q.split(/\s+/).filter(w=>w.length>=2);
+  return pool.filter(a=>{ const h=(a.t+" "+a.d).toLowerCase(); return ws.every(w=>h.includes(w)); }).slice(0,60);
+}
+function subFixes(code){
+  if(fixUnsub){ fixUnsub(); fixUnsub=null; }
+  if(!code) return;
+  fixUnsub=onSnapshot(query(collection(db,"fixes"),where("code","==",code)), s=>{ fixes[code]=s.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts); render(); });
+}
+function helpHtml(){
+  if(kb===null&&!kbState) setTimeout(loadKb,0);
+  const found=helpFound();
+  const msg= (kbState==="loading"||!kbState)?"Загружаю справочник…": kbState==="empty"?"Справочник ещё не загружен: Профиль → «Загрузить справочник аварий» и выберите файл kb_alarms.json.":
+    kbState==="error"?`Нет связи с базой. <button class="txt" data-act="kb_retry">Повторить</button>`:
+    !helpQ.trim()?`В справочнике ${kb?kb.length:0} аварий из руководств SACMI. Выберите пресс (1–3 старый пульт, 4–6 сенсорный) и введите номер с экрана.`:
+    !found.length?"Ничего не найдено. Проверьте номер или выберите «Все».":"";
+  return `<h2 style="margin:4px 0">Помощник: аварии прессов</h2>
+  <div class="chips">${[0,1,2,3,4,5,6].map(i=>`<button class="${helpPress===i?"on":""}" data-act="hp" data-k="${i}">${i?"Пресс "+i:"Все"}</button>`).join("")}</div>
+  <div id="hsbox"></div><div class="small" style="margin:4px 0 8px">${msg}</div>`+
+  found.map(a=>{ const key=a.src+a.c+a.t, open=helpOpen===key, fx=fixes[a.c];
+    return `<div class="al" data-act="al" data-k="${esc(key)}" data-c="${a.c}"><div class="row"><span class="c">${a.c}</span><b style="flex:1">${esc(a.t)}</b></div>
+    <div class="small" style="${/блок/i.test(a.k)?"color:var(--bad)":""}">${[a.k,kbNames[a.src]].filter(Boolean).map(esc).join(" · ")}</div>
+    <div style="${open?"":"display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"}">${esc(a.d)}</div>
+    ${open?`<div style="color:var(--ok);font-weight:700;margin-top:6px">Как решали у нас</div>${!fx?"…":!fx.length?`<div class="small">Пока никто не записал. Будьте первым.</div>`:fx.map(f=>`<div class="fix">${esc(f.text)}<div class="small">${f.press?"Пресс "+f.press+" · ":""}${esc(f.nick)}, ${dayLabel(f.ts)} ${clock(f.ts)}</div></div>`).join("")}
+    <button style="width:100%;margin-top:6px" data-act="fix_add" data-c="${a.c}" data-s="${a.src}">+ Как решили у нас</button>`:""}</div>`; }).join("");
+}
+
+/* ================= отрисовка ================= */
+let lastChatLen=-1, searchBox=null;
+function render(chatChanged){
+  if(!user||!nick||!document.getElementById("main")) return;
+  if(tab==="help"&&role!=="press") tab="dry";
+  document.getElementById("hdr").innerHTML=headerHtml();
+  document.getElementById("bar").innerHTML=brakBar();
+  const main=document.getElementById("main"), keep=window.scrollY;
+  main.innerHTML= tab==="dry"?dryHtml(): tab==="sch"?schemeHtml(): tab==="chat"?chatHtml(): tab==="help"?helpHtml(): journalHtml();
+  if(tab==="help"){
+    if(!searchBox){ searchBox=document.createElement("input"); searchBox.placeholder="Номер аварии или слова, например 2112"; searchBox.oninput=()=>{ helpQ=searchBox.value; helpOpen=null; render(); searchBox.focus(); }; }
+    document.getElementById("hsbox").appendChild(searchBox);
+  }
+  document.body.className= tab==="chat"?"chat":"";
+  document.getElementById("comp").style.display= tab==="chat"?"block":"none";
+  if(tab==="chat"&&chat.length!==lastChatLen){ lastChatLen=chat.length; setTimeout(()=>window.scrollTo(0,document.body.scrollHeight),0); }
+  else window.scrollTo(0,keep);
+  if(tab==="chat") ls("seen_chat",Date.now());
+  if(tab==="jr") ls("seen_jr",Date.now());
+  const unread=(arr,k)=>arr.filter(m=>m.ts>(+ls(k)||0)&&m.uid!==user.uid&&m.type!=="sys").length;
+  const nc=tab==="chat"?0:unread(chat,"seen_chat"), nj=tab==="jr"?0:unread(journal,"seen_jr");
+  const tabs=[["dry","🔥","Сушилки"],["sch","🧭","Цех"],["chat","💬","Чат",nc],["jr","📋","Журнал",nj]].concat(role==="press"?[["help","🛠","Помощь"]]:[]);
+  document.getElementById("nav").innerHTML=tabs.map(([k,i,t,n])=>`<button class="${tab===k?"on":""}" data-act="tab" data-k="${k}">${i}<br>${t}${n?`<i>${n>99?"99+":n}</i>`:""}</button>`).join("");
+}
+
+/* ================= нажатия ================= */
 document.addEventListener("click", e=>{
   const el=e.target.closest("[data-act]"); if(!el) return;
   const a=el.dataset.act, d=DRYERS.find(x=>x.id===el.dataset.d);
-  if(a==="tab"){ tab=el.dataset.k; render(); }
+  if(["accept","task_ack","photo","task_edit","task_del","fix_add"].includes(a)) e.stopPropagation();
+  if(a==="tab"){ tab=el.dataset.k; ls("tab",tab); lastChatLen=-1; window.scrollTo(0,0); render(); }
   else if(a==="evsel"){ evsel=+el.dataset.k; render(); }
-  else if(a==="pinfo"){ const i=+el.dataset.k, p=presses[i]||{state:"off",eva:0}; infoModal("Пресс "+i,`Состояние: ${ST[p.state]||"Выключен"}\nРаботает на: ${p.eva?"Ева "+p.eva:"не задано"}\nФормат: ${p.fmt?fmtLabel(p.fmt):"не задан"}${+p.cpm>0?`\nЦиклов в минуту: ${+p.cpm}, плиток за цикл: ${p.per||1}`:""}${+p.pressure>0&&+p.pressTs>=shiftStart()?`\nДавление: ${+p.pressure}`:""}`); }
-  else if(a==="einfo"){ const d=DRYERS[+el.dataset.k-1], e=evas[d.id], now=Date.now(); const ts=tests.filter(t=>t.dryer===d.name); infoModal(d.name,`${e&&e.synced?"На загрузке: полка "+pad3(shelfNow(e,now,d.shelves)):"Положение неизвестно"}\nСостояние: ${!e||!e.synced?"нет данных":e.running?"идёт":"СТОИТ"}\nСкорость: ${rateTxt(e?e.rate:d.shelves/d.defLapMin)} пол/мин\nПрессы: ${Object.keys(presses).filter(i=>presses[i].eva===+el.dataset.k).map(i=>"№"+i).join(", ")||"не заданы"}\n${ts.length?"Тесты:\n"+ts.map(t=>"• "+t.design+", полка "+pad3(t.testShelf)+(t.exitTs?": вышла из Евы в "+clock(t.exitTs)+", ждёт глазурь":(e&&e.running?": остановка в "+clock(now+remSec(t,e,now)*1000):": линия стоит"))).join("\n"):"Тестов нет"}`); }
-  else if(a==="linfo"){ const k=+el.dataset.k, l=lines[k]||{state:"off"}; infoModal("Глазурь "+k,`Состояние: ${ST[l.state]||"Выключен"}\nПринимает из Евы ${k}, дальше кристалина, накопитель и печь`); }
-  else if(a==="jf"){ jfilter=el.dataset.k; render(); }
   else if(a==="fix") dlgFix(d);
-  else if(a==="toggle") doToggle(d);
+  else if(a==="toggle"){ el.disabled=true; doToggle(d); }
   else if(a==="speed") dlgSpeed(d);
   else if(a==="add") dlgAdd();
   else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) modal(t.exitTs?"Тест вышел на глазурь?":"Круг прошёл?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>`, ()=>t.exitTs?doDone(t):doExit(t), t.exitTs?"Да, вышел на глазурь":"Да, круг прошёл"); }
-  else if(a==="brig"){ ls("brigade",el.dataset.b); document.querySelector(".ov")?.remove(); render(); }
-  else if(a==="accept"){ e.stopPropagation();  const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
+  else if(a==="pinfo") pressInfo(+el.dataset.k);
+  else if(a==="einfo") evaInfo(+el.dataset.k);
+  else if(a==="params") dlgParams();
+  else if(a==="output") dlgOutput();
+  else if(a==="accept"){ const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
+  else if(a==="brak") dlgBrak();
   else if(a==="accept_shift"){ ls("shift_"+user.uid,Date.now()); const s=sched(); log(nick+" принял смену"+(s&&s.mine?" ("+s.n+")":"")); render(); }
-  else if(a==="handover"){ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); }
-  else if(a==="menu") modal(`${esc(nick)}<div class="small">${ROLES[role]}</div>`, `${lead()?"":`<div class="small">Моя смена (1–4)</div><div style="display:flex;gap:8px;margin:6px 0 12px">${[1,2,3,4].map(b=>`<button data-act="brig" data-b="${b}" class="${brigade()===b?"ok":""}" style="flex:1">${b}</button>`).join("")}</div>`}<button style="width:100%" id="so">Выйти</button>`, null).querySelector("#so").onclick=()=>{ signOut(auth); document.querySelector(".ov")?.remove(); };
+  else if(a==="handover") dlgHandOver();
+  else if(a==="menu") dlgProfile();
+  else if(a==="task_open"){ taskOpen=true; render(); }
+  else if(a==="task_close"){ taskOpen=false; render(); }
+  else if(a==="task_ack"){ if(task) setDoc(doc(db,"acks",task.ts+"_"+user.uid),{task:task.ts, uid:user.uid, nick}); taskOpen=false; render(); }
+  else if(a==="task_edit") dlgTask();
+  else if(a==="task_del"){ deleteDoc(doc(db,"config","shift_task")); taskOpen=false; }
+  else if(a==="photo") viewPhoto(el.dataset.p, el.getAttribute("src").split(",")[1]);
+  else if(a==="clear_chat"||a==="clear_jr"){ const ch=a==="clear_chat"?"general":"journal";
+    modal(ch==="general"?"Очистить чат?":"Очистить журнал?","<p>Все записи будут удалены у всех.</p>",()=>{ (async()=>{ const s=await getDocs(collection(db,"chats",ch,"messages")); const docs=s.docs; for(let i=0;i<docs.length;i+=400){ const b=writeBatch(db); docs.slice(i,i+400).forEach(x=>b.delete(x.ref)); await b.commit(); } if(ch==="general") deleteDoc(doc(db,"config","shift_task")); toast("Удалено: "+docs.length); })(); },"Очистить"); }
+  else if(a==="hp"){ helpPress=+el.dataset.k; render(); }
+  else if(a==="kb_retry"){ kb=null; kbState=""; render(); }
+  else if(a==="al"){ const k=el.dataset.k; helpOpen=helpOpen===k?null:k; subFixes(helpOpen?el.dataset.c:null); render(); }
+  else if(a==="fix_add"){ const code=el.dataset.c, src=el.dataset.s; let pr=helpPress;
+    const ov=modal(`Авария ${code}: как решили`, `<div class="small">Пресс</div><div class="fm">${[1,2,3,4,5,6].map(i=>`<button data-p="${i}" class="${pr===i?"on":""}">${i}</button>`).join("")}</div><textarea id="ft" placeholder="Что сделали, что помогло"></textarea>`, o=>{
+      const t=o.querySelector("#ft").value.trim(); if(!t) return false;
+      addDoc(collection(db,"fixes"),{code, src, press:pr, text:t, uid:user.uid, nick, ts:Date.now()});
+    });
+    ov.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ pr=+b.dataset.p; ov.querySelectorAll("[data-p]").forEach(x=>x.classList.toggle("on",x===b)); }); }
 });
-setInterval(()=>{ if(user&&nick&&!document.querySelector(".ov")) render(); },10000);
-setInterval(()=>{ document.querySelectorAll("[data-stop]").forEach(el=>{ const d=DRYERS.find(x=>x.id===el.dataset.stop); if(d) el.textContent="простой "+mmss((Date.now()-evaOf(d).refTime)/1000); }); },1000);
+/* живое обновление: сушилки и цех раз в 5 секунд, пока не открыто окно и не идёт ввод */
+setInterval(()=>{
+  if(!user||!nick||document.querySelector(".ov,.viewer")) return;
+  if((tab==="dry"||tab==="sch")&&document.activeElement?.tagName!=="INPUT") render();
+  else if(document.getElementById("hdr")) document.getElementById("hdr").innerHTML=headerHtml();
+},5000);
+window.addEventListener("resize",()=>{ if(tab==="sch") render(); });
 </script>
 </body>
 </html>
