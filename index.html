@@ -54,6 +54,7 @@ input,select{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px 
 .fm{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.fm button{flex:none;min-height:40px;padding:8px 12px}.fm button.on{background:color-mix(in srgb,var(--ok) 25%,transparent);border-color:var(--ok)}
 .sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;font-size:13px}.sb.on{background:rgba(46,160,67,.15)}.sb.off{background:rgba(230,160,0,.2)}.sb button{padding:6px 12px;width:auto;flex:none}
 .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}.chips button{flex:none;min-height:38px;padding:6px 12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%}.card.slim{display:flex;align-items:center;gap:8px;padding:2px 12px;opacity:.7}.card.slim button{flex:none;min-height:36px;padding:4px 10px}.sch{position:relative}.sch svg{position:absolute;inset:0;width:100%;height:100%}.sch svg path{fill:none;stroke-width:3;vector-effect:non-scaling-stroke}.sch svg path.flow{stroke-dasharray:10 8;animation:fl 1s linear infinite}@keyframes fl{to{stroke-dashoffset:-18}}.nd{position:absolute;box-sizing:border-box;border:2px solid;border-radius:12px;background:var(--card);padding:6px;font-size:11px;display:flex;flex-direction:column;justify-content:center;gap:1px;cursor:pointer}.nd b{font-size:13px}
+.bb{display:flex;align-items:center;gap:8px;background:#ef4444;color:#fff;padding:4px 8px 4px 16px;cursor:pointer}.bb button{flex:none;min-height:36px;padding:4px 12px;color:#fff;border-color:#fff;font-weight:700}
 </style>
 </head>
 <body>
@@ -274,6 +275,11 @@ function evaCard(d){
   ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}`:""}
   <div style="margin-top:8px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
 }
+const pendBrak=()=>journal.filter(m=>m.type==="brak"&&(m.to||[]).includes(role)&&Date.now()-m.ts<86400000&&!(accepts[m.id]||[]).some(a=>a.role===role));
+function brakBar(){
+  if(!onShift()) return ""; const p=pendBrak(); if(!p.length) return ""; const m=p[0];
+  return `<div class="bb" data-act="tab" data-k="jr"><div style="flex:1"><b>⚠ БРАК ждёт вас${p.length>1?" ("+p.length+")":""}</b><div style="font-size:12px">${esc(m.tag||"")} · ${esc(m.author||"")}, ${clock(m.ts)}</div></div><button data-act="accept" data-m="${m.id}">Принял</button></div>`;
+}
 function journalHtml(){
   const f=jfilter, list=journal.filter(m=>f==="all"||(f==="brak"&&m.type==="brak")||(f==="lap"&&m.type==="lap")||(f==="stop"&&m.type==="sys"&&/СТОИТ|пошла/.test(m.text||"")));
   let out="", last=null;
@@ -288,7 +294,9 @@ function journalHtml(){
       <div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
     } else out+=`<div class="sys">${clock(m.ts)} · ${esc(m.text)}</div>`;
   }
-  return `<div class="chips">${[["all","Всё"],["brak","Брак"],["lap","Круги"],["stop","Остановки"]].map(([k,t])=>`<button class="${f===k?"on":""}" data-act="jf" data-k="${k}">${t}</button>`).join("")}</div>${out||`<div class="small">Записей нет</div>`}`;
+  const pend=pendBrak();
+  const pin=pend.length?`<div style="color:#ef4444;font-weight:700;font-size:13px;margin:4px 0">📌 Ждут вашего подтверждения</div>`+pend.map(m=>`<div class="brak"><b class="t">БРАК</b> <b>${esc(m.tag)}</b>${m.text?`<div>${esc(m.text)}</div>`:""}<button class="ok" style="width:100%;margin-top:8px" data-act="accept" data-m="${m.id}">Принял информацию</button><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`).join(""):"";
+  return pin+`<div class="chips">${[["all","Всё"],["brak","Брак"],["lap","Круги"],["stop","Остановки"]].map(([k,t])=>`<button class="${f===k?"on":""}" data-act="jf" data-k="${k}">${t}</button>`).join("")}</div>${out||`<div class="small">Записей нет</div>`}`;
 }
 /* ---------- сушилки: чипы, неактивные свёрнуты ---------- */
 const evaActive=d=>(evas[d.id]&&evas[d.id].synced)||tests.some(t=>t.dryer===d.name);
@@ -345,7 +353,7 @@ function shiftBar(){
 function render(){
   if(!user||!nick) return;
   const initials=nick.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?";
-  root.innerHTML=`<header><h1>КерамПульс</h1><div class="me" data-act="menu">${esc(initials)}</div></header>${shiftBar()}
+  root.innerHTML=`<header><h1>КерамПульс</h1><div class="me" data-act="menu">${esc(initials)}</div></header>${shiftBar()}${brakBar()}
   <main>${tab==="dry"?dryHtml()+(role==="press"&&onShift()?`<button class="ok big" data-act="add">+ Тест</button>`:""):tab==="sch"?schemeHtml():journalHtml()}</main>
   <nav><button class="${tab==="dry"?"on":""}" data-act="tab" data-k="dry">🔥<br>Сушилки</button><button class="${tab==="sch"?"on":""}" data-act="tab" data-k="sch">🧭<br>Цех</button><button class="${tab==="jr"?"on":""}" data-act="tab" data-k="jr">📋<br>Журнал</button></nav>`;
 }
@@ -364,7 +372,7 @@ document.addEventListener("click", e=>{
   else if(a==="add") dlgAdd();
   else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) modal(t.exitTs?"Тест вышел на глазурь?":"Круг прошёл?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>`, ()=>t.exitTs?doDone(t):doExit(t), t.exitTs?"Да, вышел на глазурь":"Да, круг прошёл"); }
   else if(a==="brig"){ ls("brigade",el.dataset.b); document.querySelector(".ov")?.remove(); render(); }
-  else if(a==="accept"){ const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
+  else if(a==="accept"){ e.stopPropagation();  const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
   else if(a==="accept_shift"){ ls("shift_"+user.uid,Date.now()); const s=sched(); log(nick+" принял смену"+(s&&s.mine?" ("+s.n+")":"")); render(); }
   else if(a==="handover"){ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); }
   else if(a==="menu") modal(`${esc(nick)}<div class="small">${ROLES[role]}</div>`, `${lead()?"":`<div class="small">Моя смена (1–4)</div><div style="display:flex;gap:8px;margin:6px 0 12px">${[1,2,3,4].map(b=>`<button data-act="brig" data-b="${b}" class="${brigade()===b?"ok":""}" style="flex:1">${b}</button>`).join("")}</div>`}<button style="width:100%" id="so">Выйти</button>`, null).querySelector("#so").onclick=()=>{ signOut(auth); document.querySelector(".ov")?.remove(); };
