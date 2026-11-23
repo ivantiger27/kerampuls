@@ -433,20 +433,20 @@ function dlgPress(i){
   const ov=modal(`Пресс ${i}`, `<div class="small">Состояние</div><div class="fm">${["run","idle","off"].map(s=>chip("st",s,ST[s],p.state===s)).join("")}</div>
   <div class="small">Работает на Еву</div><div class="fm">${chip("ev",0,"не задано",!p.eva)}${[1,2,3,4].map(k=>chip("ev",k,"Ева "+k,p.eva===k)).join("")}</div>
   <div class="small">Формат</div><div class="fm">${chip("fm","","не задан",!p.fmt)}${Object.keys(FORMATS).map(f=>chip("fm",f,fmtLabel(f),p.fmt===f)).join("")}</div>
-  <div class="row"><input id="cpm" inputmode="decimal" placeholder="Циклов в минуту" value="${p.cpm>0?trim(p.cpm):""}"><input id="per" inputmode="numeric" placeholder="Выходов" value="${p.per||1}"></div>
+  <input id="cpm" inputmode="decimal" placeholder="Циклов в минуту" value="${p.cpm>0?trim(p.cpm):""}">
   <input id="psi" inputmode="decimal" placeholder="Установленное давление, бар" value="${marked?trim(p.pressure):""}">
   <div id="pv" class="small"></div>`, o=>{
-    const cpm=num(o.querySelector("#cpm").value), per=Math.max(1,parseInt(o.querySelector("#per").value,10)||1), psi=num(o.querySelector("#psi").value);
+    const cpm=num(o.querySelector("#cpm").value), per=p.per||1, psi=num(o.querySelector("#psi").value);
     if(cpm>PRESS_MAX) return false;
     savePress(i,{...p, cpm, per, tpm:cpm*per, pressure:psi});
   });
-  const upd=()=>{ const cpm=num(ov.querySelector("#cpm").value), per=Math.max(1,parseInt(ov.querySelector("#per").value,10)||1), psi=num(ov.querySelector("#psi").value);
-    ov.querySelector("#pv").innerHTML="Циклы, выходы (плиток за удар), давление в барах.<br>"+(cpm>0?`Итого ${trim(cpm*per)} плиток в минуту<br>`:"")+(cpm>PRESS_MAX?`<b style="color:var(--bad)">Пресс делает не больше 20 циклов в минуту.</b><br>`:"")+(psi>0&&(psi<150||psi>382)?`<b style="color:var(--warn)">Необычное давление: обычно 240–270 бар, максимум 382.</b>`:"Давление только для информации, на расчёт не влияет.");
+  const upd=()=>{ const cpm=num(ov.querySelector("#cpm").value), psi=num(ov.querySelector("#psi").value);
+    ov.querySelector("#pv").innerHTML=(cpm>PRESS_MAX?`<b style="color:var(--bad)">Пресс делает не больше 20 циклов в минуту.</b><br>`:"")+(psi>0&&(psi<150||psi>382)?`<b style="color:var(--warn)">Необычное давление: обычно 240–270 бар, максимум 382.</b>`:"Давление только для информации, на расчёт не влияет.");
     ov.querySelector("#mo").disabled=cpm>PRESS_MAX; };
   ov.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{ const g=b.dataset.g, v=b.dataset.v;
     if(g==="st") p.state=v; else if(g==="ev") p.eva=+v; else p.fmt=v;
     ov.querySelectorAll(`[data-g="${g}"]`).forEach(x=>x.classList.toggle("on",x===b)); });
-  ["cpm","per","psi"].forEach(k=>ov.querySelector("#"+k).oninput=upd); upd();
+  ["cpm","psi"].forEach(k=>ov.querySelector("#"+k).oninput=upd); upd();
 }
 function dlgParams(){
   const ids=[1,2,3,4,5,6].filter(i=>pressOf(i).state!=="off"), list=ids.length?ids:[1,2,3,4,5,6], st=shiftStart();
@@ -631,14 +631,13 @@ function schemeHtml(){
   <div class="small" style="margin-top:6px">Нажмите на пресс или Еву, чтобы увидеть всё по ним.</div>`;
 }
 function pressInfo(i){
-  const p=pressOf(i), st=shiftStart(), tps=FORMATS[p.fmt]||0;
-  const ov=modal(`<span class="led" style="background:${LED[p.state]};width:12px;height:12px"></span> Пресс ${i}`,
-    irow("Состояние",ST[p.state],p.state==="run"?"var(--ok)":p.state==="idle"?"var(--warn)":"")+irow("Пульт",pressPanel(i))+
-    irow("Работает на",p.eva?`Ева ${p.eva} → глазурь ${p.eva}`:"не задано")+irow("Формат",p.fmt?`${fmtLabel(p.fmt)}, ${tps} плиток на полке`:"не задан")+
-    irow("Циклов в минуту",p.cpm>0?trim(p.cpm):"не указано")+irow("Выходов (плиток за удар)",p.cpm>0?p.per:"—")+irow("Плиток в минуту",p.tpm>0?trim(p.tpm):"—")+
-    irow("Полок в минуту на Еву",p.tpm>0&&tps?rateTxt(p.tpm/tps):"—")+irow("Установленное давление",p.pressure>0&&p.pressTs>=st?`${trim(p.pressure)} бар (отмечено в ${clock(p.pressTs)})`:"не отмечено в эту смену")+
-    (p.deaer>0?irow("Деаэрация",trim(p.deaer)):"")+irow("Выпуск за смену",p.outM2>0&&p.outTs>=st?trim(p.outM2)+" м²":p.outM2>0?"прошлая смена: "+trim(p.outM2)+" м²":"—")+
-    (p.by?irow("Последнее изменение",`${esc(p.by)}, ${clock(p.ts)}`):"")+(canPress()?`<button class="ok big" id="ed" style="margin-top:12px">Изменить пресс</button>`:""), null);
+  const p=pressOf(i), st=shiftStart(), lc=p.state==="run"?"var(--ok)":p.state==="idle"?"var(--warn)":"var(--tx2)";
+  const ov=modal(`<span class="led" style="background:${LED[p.state]};width:12px;height:12px"></span> Пресс ${i} <span style="font-size:16px;color:${lc}">${ST[p.state]}${p.eva?" → Ева "+p.eva:""}</span>`,
+    irow("Формат",p.fmt?fmtLabel(p.fmt):"не задан")+irow("Циклов в минуту",p.cpm>0?trim(p.cpm):"не указано")+
+    irow("Давление",p.pressure>0&&p.pressTs>=st?trim(p.pressure)+" бар":"не отмечено")+(p.deaer>0?irow("Деаэрация",trim(p.deaer)):"")+
+    (p.outM2>0&&p.outTs>=st?irow("Выпуск за смену",trim(p.outM2)+" м²"):"")+
+    (p.by?`<div class="small" style="margin-top:6px">Изменил ${esc(p.by)} в ${clock(p.ts)}</div>`:"")+
+    (canPress()?`<button class="ok big" id="ed" style="margin-top:12px">Изменить пресс</button>`:""), null);
   ov.querySelector("#ed")?.addEventListener("click",()=>{ ov.remove(); dlgPress(i); });
 }
 function evaInfo(k){
@@ -646,10 +645,10 @@ function evaInfo(k){
   const ps=[1,2,3,4,5,6].filter(i=>pressOf(i).eva===k);
   const ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now));
   modal(`<span class="led" style="background:${!known?LED.off:ee.running?LED.run:LED.idle};width:12px;height:12px"></span> ${d.name}`,
-    irow("Модель",MODEL(d))+irow("Состояние",!known?"нет данных":ee.running?"идёт":"СТОИТ, простой "+mmss((now-ee.refTime)/1000),known&&!ee.running?"var(--warn)":"")+
-    irow("На загрузке",known?`полка ${pad3(shelfNow(ee,now,d.shelves))} из ${d.shelves}`:"неизвестно")+
-    (known?irow("Скорость",rateTxt(ee.rate)+" пол/мин")+irow("Круг",`${fmtDur(d.shelves/ee.rate*60)} (быстрее ${fmtDur(d.shelves/EVA_MAX*60)} не бывает)`)+(ee.fmt?irow("Формат",fmtLabel(ee.fmt)):"")+(ee.tpm>0?irow("Плиток в минуту",trim(ee.tpm)):""):"")+
-    irow("Прессы",ps.length?ps.map(n=>{const p=pressOf(n); return `№${n}: ${ST[p.state].toLowerCase()}${p.cpm>0?", "+trim(p.cpm)+" ц/мин":""}`;}).join("\n"):"не заданы")+irow("Дальше","глазурь "+k)+
+    irow("Состояние",!known?"нет данных":ee.running?"идёт":"СТОИТ, простой "+mmss((now-ee.refTime)/1000),known&&!ee.running?"var(--warn)":"")+
+    irow("На загрузке",known?`полка ${pad3(shelfNow(ee,now,d.shelves))}`:"неизвестно")+
+    (known?irow("Скорость",`${rateTxt(ee.rate)} пол/мин, круг ${fmtDur(d.shelves/ee.rate*60)}`)+(ee.fmt?irow("Формат",fmtLabel(ee.fmt)):""):"")+
+    irow("Прессы",ps.length?ps.map(n=>{const p=pressOf(n); return `№${n}${p.state!=="run"?" ("+ST[p.state].toLowerCase()+")":""}${p.cpm>0?", "+trim(p.cpm)+" ц/мин":""}`;}).join("\n"):"не заданы")+
     `<h3 style="margin:12px 0 4px">${ts.length?"Тесты ("+ts.length+")":"Тестов нет"}</h3>`+ts.map(t=>`<div class="test"><b>${esc(t.design)}</b><div>${t.exitTs?`Полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}, ждёт глазурь ${fmtStop((now-t.exitTs)/1000)}`:!known?`Полка ${pad3(t.testShelf)}`:!ee.running?`Полка ${pad3(t.testShelf)}, линия стоит, осталось ${Math.ceil(leftSh(t,ee,now))} полок`:`Полка ${pad3(t.testShelf)}, остановка в ${clock(now+remSec(t,ee,now)*1000)}, через ${fmtDur(remSec(t,ee,now))}`}</div><div class="small">Поставил ${esc(t.author||"—")} в ${clock(t.id)}</div></div>`).join(""), null);
 }
 /* --- Чат --- */
