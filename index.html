@@ -548,8 +548,8 @@ function drawPend(){ const el=document.getElementById("cpend"); if(!el) return;
 /* ================= экраны ================= */
 function headerHtml(){
   let left;
-  if(onShift()) left=`<div class="st-on" data-act="handover"><b><span class="dotg"></span>${brigade()?"Смена "+brigade():"На смене"} · с ${clock(shiftTs())}</b><small>нажмите, чтобы сдать смену</small></div>`;
-  else { const s=sched(); left=`<div class="st-off"><div style="flex:1;min-width:0"><b>Не на смене</b><small>${!s?"укажите смену в профиле":s.mine?"сейчас ваша: "+s.n:"сегодня: "+s.n}</small></div><button class="ok" data-act="accept_shift" style="flex:none">Принять</button></div>`; }
+  if(onShift()) left=`<div class="st-off"><div style="flex:1;min-width:0"><b style="color:var(--tx)"><span class="dotg"></span>${brigade()?"Смена "+brigade():"На смене"}</b><small>принята в ${clock(shiftTs())}</small></div><button data-act="handover" style="flex:none">Сдать смену</button></div>`;
+  else { const s=sched(); left=`<div class="st-off"><div style="flex:1;min-width:0"><b>Не на смене</b><small>${!s?"укажите смену в профиле":s.mine?"сейчас ваша: "+s.n:"сегодня: "+s.n}</small></div><button class="ok" data-act="accept_shift" style="flex:none">Принять смену</button></div>`; }
   return left+avatarHtml(user.uid,nick,40,'data-act="menu"');
 }
 const pendBrak=()=>journal.filter(m=>m.type==="brak"&&(m.to||[]).includes(role)&&Date.now()-m.ts<86400000&&!(accepts[m.id]||[]).some(a=>a.role===role));
