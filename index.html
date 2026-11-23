@@ -40,6 +40,7 @@ h2{margin:0;font-size:20px}
 button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:24px;padding:8px 12px;min-height:44px;flex:1;cursor:pointer}
 button.ok{background:var(--ok);color:var(--onok);border:0;font-weight:700}
 button.warn{background:var(--warn);color:#2b1b00;border:0;font-weight:700}
+.evb{display:flex;gap:8px;margin:6px 0 4px}.evb button{flex:1;height:56px;font-size:24px;font-weight:800}.evb button.on{background:var(--ok);color:#fff;border-color:var(--ok)}.evb button:disabled{opacity:.35}
 button.txt{border:0;color:var(--ok);flex:none;padding:6px 8px;min-height:36px}
 button.big{width:100%;min-height:48px;font-size:16px;font-weight:800;margin:4px 0 8px}
 button:disabled{opacity:.45}
@@ -166,7 +167,7 @@ const isLead = r=> r==="master"||r==="chief";
 /* ================= расчёт Евы (как в приложении) ================= */
 const mod = (a,n)=>((a%n)+n)%n;
 const evaDef = d=>({synced:false, refPos:0, refTime:0, running:true, rate:d.shelves/d.lap, fmt:"", tpm:0});
-const pos = (e,now)=> (!e.synced||!e.running) ? e.refPos : e.refPos + (now-e.refTime)/60000*e.rate;
+const pos = (e,now)=> (!e.synced||!e.running||e.off) ? e.refPos : e.refPos + (now-e.refTime)/60000*e.rate;
 const shelfNow = (e,now,n)=> mod(Math.floor(pos(e,now)),n)+1;
 const leftSh = (t,e,now)=> Math.max(0, t.target-pos(e,now));
 const remSec = (t,e,now)=> e.rate>0 ? leftSh(t,e,now)/e.rate*60 : 1e9;
@@ -214,6 +215,9 @@ function sched(){
   const isDay=h>=8&&h<20, sd=h<8?day0-1:day0, idx=((sd-ANCHOR+1-(b-1))%4+4)%4, mine=isDay?idx===0:idx===1;
   return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+1-(b-1))%4+4)%4],mine:false};
 }
+const endingStart=()=>{ const s=shiftStart(), n=Date.now(); return n-s<90*60000 ? s-12*3600000 : s; };
+const nearEnd=()=>{ const s=shiftStart(), n=Date.now(); return n-s<90*60000 || n>=s+12*3600000-90*60000; };
+const zeroed=()=>[1,2,3,4,5,6].some(i=>(pressOf(i).outTs||0)>=endingStart());
 const shiftStart=()=>{ const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), d0=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); return (h<8?d0-4*3600000:h<20?d0+3*3600000:d0+15*3600000); };
 
 /* ================= состояние ================= */
@@ -266,7 +270,7 @@ function startData(){
   buildShell();
   const sub=(q,f)=>unsubs.push(onSnapshot(q,f,()=>{}));
   sub(collection(db,"presses"), s=>{ presses={}; s.forEach(d=>{ const x=d.data(); presses[+d.id.replace("p","")]={state:x.state||"off", eva:+x.eva||0, fmt:x.fmt||"", tpm:num(x.tpm), cpm:num(x.cpm), per:Math.max(1,+x.per||1), pressure:num(x.pressure), pressTs:+x.pressTs||0, deaer:num(x.deaer), outM2:num(x.outM2), outTs:+x.outTs||0, by:x.by||"", ts:+x.ts||0}; }); render(); });
-  sub(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd){ const r=num(x.rate); evas[d.id]={synced:!!x.synced, refPos:num(x.refPos), refTime:+x.refTime||0, running:x.running!==false, rate:(r>0.05&&r<30)?r:dd.shelves/dd.lap, fmt:x.fmt||"", tpm:num(x.tpm)}; } }); render(); });
+  sub(collection(db,"evas"), s=>{ evas={}; s.forEach(d=>{ const x=d.data(), dd=DRYERS.find(z=>z.id===d.id); if(dd){ const r=num(x.rate); evas[d.id]={synced:!!x.synced, refPos:num(x.refPos), refTime:+x.refTime||0, running:x.running!==false, rate:(r>0.05&&r<30)?r:dd.shelves/dd.lap, fmt:x.fmt||"", tpm:num(x.tpm), off:!!x.off}; } }); render(); });
   sub(collection(db,"tests"), s=>{ tests=[]; s.forEach(d=>{ const x=d.data(); if(DRYERS.some(z=>z.name===x.dryer)) tests.push({id:+x.id, dryer:x.dryer, design:x.design||"", testShelf:+x.testShelf, target:num(x.target), author:x.author||"", exitTs:+x.exitTs||0}); }); render(); });
   sub(query(collection(db,"chats","journal","messages"),orderBy("ts","desc"),limit(100)), s=>{ journal=s.docs.map(d=>({id:d.id,pending:d.metadata.hasPendingWrites,...d.data()})); render(); });
   sub(query(collection(db,"chats","general","messages"),orderBy("ts","desc"),limit(80)), s=>{ chat=s.docs.map(d=>({id:d.id,pending:d.metadata.hasPendingWrites,...d.data()})).reverse(); render(true); });
@@ -284,7 +288,7 @@ function subAcks(){
 /* ================= запись ================= */
 const send=(ch,text,type="msg",tag="",extra={})=> addDoc(collection(db,"chats",ch,"messages"), {uid:user.uid, author:nick, text, ts:Date.now(), type, tag, role, ...extra});
 const log=(text,type="sys",tag="")=> send("journal",text,type,tag);
-const evaMap = e=>({synced:e.synced, refPos:e.refPos, refTime:e.refTime, running:e.running, rate:e.rate, fmt:e.fmt, tpm:e.tpm});
+const evaMap = e=>({synced:e.synced, refPos:e.refPos, refTime:e.refTime, running:e.running, rate:e.rate, fmt:e.fmt, tpm:e.tpm, off:!!e.off});
 const testMap = t=>({id:t.id, dryer:t.dryer, design:t.design, testShelf:t.testShelf, target:t.target, author:t.author, exitTs:t.exitTs||0});
 function doFix(d,c){
   const now=Date.now(), old=evaOf(d), ne=evaSynced(old,c,d.shelves,now), b=writeBatch(db);
@@ -310,6 +314,13 @@ function doAdd(d,name,shelf,loading){
   b.set(doc(db,"tests",String(nt.id)), testMap(nt)); b.commit();
   log(`${d.name}: поставлен тест «${name}», полка ${pad3(shelf)} — ${nick}`);
 }
+function doPower(d,on){
+  const now=Date.now(), e=evaOf(d);
+  const ne= on ? {...e, off:false, running:true, refTime:now} : {...e, refPos:pos(e,now), refTime:now, off:true, running:true};
+  setDoc(doc(db,"evas",d.id), evaMap(ne)); log(`${d.name}: ${on?"включена":"ВЫКЛЮЧЕНА"} — ${nick}`);
+}
+function cancelTest(t){ deleteDoc(doc(db,"tests",String(t.id))); log(`${t.dryer}: тест «${t.design}», полка ${pad3(t.testShelf)} отменён — ${nick}`); }
+function undoExit(t){ setDoc(doc(db,"tests",String(t.id)), {exitTs:0}, {merge:true}); log(`${t.dryer}: отменено «Круг прошёл» для теста «${t.design}» — ${nick}`); }
 function doExit(t){
   const now=Date.now(); setDoc(doc(db,"tests",String(t.id)), {exitTs:now}, {merge:true});
   log(`Круг прошёл: тест «${t.design}», ${t.dryer}, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(now)} (в пути ${fmtStop((now-t.id)/1000)}). Ждём выхода на глазурь`, "lap", "Круг пройден");
@@ -400,14 +411,17 @@ function dlgFix(d){
   }, "Пересчитать");
 }
 function dlgAdd(){
-  modal("Новый тест", `<select id="d">${DRYERS.map((d,i)=>`<option value="${d.id}" ${evsel===i+1?"selected":""}>${d.name}</option>`).join("")}</select>
+  let sel=null;
+  const ov=modal("Новый тест", `<div style="font-weight:700">На какую Еву?</div><div class="evb">${DRYERS.map((d,i)=>`<button data-e="${i}" ${evaOf(d).off?"disabled":""}>${i+1}</button>`).join("")}</div>
   <input id="n" placeholder="Название теста (дизайн 001, брак…)"><input id="s" type="number" inputmode="numeric" placeholder="Полка с тестом">
   <input id="l" type="number" inputmode="numeric" placeholder="Сейчас на загрузке (необязательно)">
   <div class="small">Если тест грузят прямо сейчас, второе поле можно не заполнять. Если тест поставили раньше, впишите полку, которая сейчас на загрузке.</div>`, ov=>{
-    const d=DRYERS.find(x=>x.id===ov.querySelector("#d").value), n=ov.querySelector("#n").value.trim(), s=parseInt(ov.querySelector("#s").value,10);
+    if(sel===null) return false;
+    const d=DRYERS[sel], n=ov.querySelector("#n").value.trim(), s=parseInt(ov.querySelector("#s").value,10);
     const lv=ov.querySelector("#l").value.trim(), l=lv?parseInt(lv,10):0;
     if(!n||!(s>=1&&s<=d.shelves)||(lv&&!(l>=1&&l<=d.shelves))) return false; doAdd(d,n,s,l);
-  }, "Поставить");
+  }, "Выберите Еву");
+  ov.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{ sel=+b.dataset.e; ov.querySelectorAll("[data-e]").forEach(x=>x.classList.toggle("on",x===b)); ov.querySelector("#mo").textContent="Поставить на Еву "+(sel+1); });
 }
 function dlgSpeed(d){
   const e=evaOf(d); let fmt=e.fmt, byLap=e.tpm<=0;
@@ -464,12 +478,12 @@ function dlgParams(){
     if(rows.length) log(`Параметры прессов (${brigade()?"смена "+brigade():nick}): `+rows.map(([i,p])=>`№${i} — `+[p.pressure>0?trim(p.pressure)+" бар":null, p.cpm>0?trim(p.cpm)+" ц/мин":null, p.deaer>0?"деаэр. "+trim(p.deaer):null].filter(Boolean).join(", ")).join("; ")+` — ${nick}`);
   }, "Отправить");
 }
-function dlgOutput(){
-  const ov=modal("Выпуск за смену, м²", [1,2,3,4,5,6].map(i=>`<div class="row"><b style="width:80px;flex:none;${pressOf(i).state==="off"?"color:var(--tx2)":""}">Пресс ${i}</b><input data-i="${i}" inputmode="decimal" placeholder="${pressOf(i).state==="off"?"не работал":"м²"}"></div>`).join("")+`<b id="tot">Всего: 0 м²</b>`, o=>{
+function dlgOutput(after){
+  const ov=modal("Обнулить пресса: выпуск за смену, м²", [1,2,3,4,5,6].map(i=>`<div class="row"><b style="width:80px;flex:none;${pressOf(i).state==="off"?"color:var(--tx2)":""}">Пресс ${i}</b><input data-i="${i}" inputmode="decimal" placeholder="${pressOf(i).state==="off"?"не работал":"м²"}"></div>`).join("")+`<b id="tot">Всего: 0 м²</b>`, o=>{
     const rows=[1,2,3,4,5,6].map(i=>[i,num(o.querySelector(`[data-i="${i}"]`).value)]).filter(r=>r[1]>0);
     if(!rows.length) return false;
-    const now=Date.now(), b=writeBatch(db); rows.forEach(([i,m])=>b.set(doc(db,"presses","p"+i),{outM2:m,outTs:now},{merge:true})); b.commit();
-    log(`Выпуск за смену (${brigade()?"смена "+brigade():nick}): `+rows.map(([i,m])=>`№${i} — ${trim(m)} м²`).join("; ")+`; всего ${trim(rows.reduce((s,r)=>s+r[1],0))} м² — ${nick}`);
+    const now=Date.now(), b=writeBatch(db); rows.forEach(([i,m])=>b.set(doc(db,"presses","p"+i),{outM2:m,outTs:now},{merge:true})); b.commit(); if(after) setTimeout(after,0);
+    log(`Пресса обнулены (${brigade()?"смена "+brigade():nick}): `+rows.map(([i,m])=>`№${i} — ${trim(m)} м²`).join("; ")+`; всего ${trim(rows.reduce((s,r)=>s+r[1],0))} м² — ${nick}`);
   }, "Отправить");
   ov.querySelectorAll("[data-i]").forEach(x=>x.oninput=()=>{ let t=0; ov.querySelectorAll("[data-i]").forEach(y=>t+=num(y.value)); ov.querySelector("#tot").textContent="Всего: "+trim(t)+" м²"; });
 }
@@ -526,8 +540,13 @@ function dlgProfile(){
   ov.querySelector("#so").onclick=()=>{ ov.remove(); signOut(auth); };
 }
 function dlgHandOver(){
+  const doHand=()=>{ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); };
+  if(role==="press"&&nearEnd()&&!zeroed()){
+    modal("Пресса не обнулены", `<p>Перед сдачей смены кто-то из прессовщиков должен обнулить пресса: ввести квадратуру за смену. После ввода смена сдастся сама.</p>`, ()=>{ setTimeout(()=>dlgOutput(doHand),0); }, "Обнулить пресса");
+    return;
+  }
   const ov=modal("Сдать смену?", `<p>После этого управление выключится до следующего «Принять».</p>`, ()=>{ log(nick+" сдал смену"); ls("shift_"+user.uid,0); render(); }, "Сдать смену",
-    role==="press"?`<button id="ob">Сначала выпуск</button>`:"");
+    role==="press"&&!zeroed()?`<button id="ob">Обнулить пресса</button>`:"");
   ov.querySelector("#ob")?.addEventListener("click",()=>{ ov.remove(); dlgOutput(); });
 }
 
@@ -557,23 +576,24 @@ function headerHtml(){
   return left+avatarHtml(user.uid,nick,40,'data-act="menu"');
 }
 const pendBrak=()=>journal.filter(m=>m.type==="brak"&&(m.to||[]).includes(role)&&Date.now()-m.ts<86400000&&!(accepts[m.id]||[]).some(a=>a.role===role));
+function zeroBar(){ return canPress()&&nearEnd()&&!zeroed()?`<div class="bb" style="background:#ffb020;color:#2b1b00" data-act="output"><b style="flex:1">📦 Конец смены: пресса не обнулены</b><button data-act="output" style="color:#2b1b00">Обнулить</button></div>`:""; }
 function brakBar(){
-  if(!onShift()) return ""; const p=pendBrak(); if(!p.length) return ""; const m=p[0];
-  return `<div class="bb" data-act="tab" data-k="jr"><div style="flex:1"><b>⚠ БРАК ждёт вас${p.length>1?" ("+p.length+")":""}</b><div style="font-size:12px">${esc(m.tag||"")} · ${esc(m.author||"")}, ${clock(m.ts)}</div></div><button data-act="accept" data-m="${m.id}">Принял</button></div>`;
+  if(!onShift()) return ""; const p=pendBrak(); if(!p.length) return zeroBar(); const m=p[0];
+  return zeroBar()+`<div class="bb" data-act="tab" data-k="jr"><div style="flex:1"><b>⚠ БРАК ждёт вас${p.length>1?" ("+p.length+")":""}</b><div style="font-size:12px">${esc(m.tag||"")} · ${esc(m.author||"")}, ${clock(m.ts)}</div></div><button data-act="accept" data-m="${m.id}">Принял</button></div>`;
 }
 /* --- Сушилки --- */
-const evaActive=d=>tests.some(t=>t.dryer===d.name)||(evas[d.id]&&evas[d.id].running===false)||[1,2,3,4,5,6].some(i=>{const p=pressOf(i);return p.eva===DRYERS.indexOf(d)+1&&p.state!=="off";});
+const evaActive=d=>!(evas[d.id]&&evas[d.id].off)&&(tests.some(t=>t.dryer===d.name)||(evas[d.id]&&evas[d.id].running===false)||[1,2,3,4,5,6].some(i=>{const p=pressOf(i);return p.eva===DRYERS.indexOf(d)+1&&p.state!=="off";}));
 const hasTest=d=>tests.some(t=>t.dryer===d.name&&!t.exitTs);
 function evaCard(d){
   const e=evaOf(d), now=Date.now(), stopped=!e.running, can=canPress(), ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,e,now)-remSec(b,e,now));
   const feed=[1,2,3,4,5,6].filter(i=>pressOf(i).eva===DRYERS.indexOf(d)+1&&pressOf(i).state!=="off");
   const tr=ts.map(t=>{
-    if(t.exitTs) return `<div class="test out"><b style="font-size:18px">${esc(t.design)}</b><div style="color:var(--blue);font-weight:700">🔄 Круг прошёл, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}</div><div class="small">Ждёт выхода на глазурь уже ${fmtStop((now-t.exitTs)/1000)}${t.author?" · поставил "+esc(t.author):""}</div>${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Вышел на глазурь</button>`:""}</div>`;
+    if(t.exitTs) return `<div class="test out"><b style="font-size:18px">${esc(t.design)}</b><div style="color:var(--blue);font-weight:700">🔄 Круг прошёл, полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}</div><div class="small">Ждёт выхода на глазурь уже ${fmtStop((now-t.exitTs)/1000)}${t.author?" · поставил "+esc(t.author):""}</div>${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Вышел на глазурь</button>${now-t.exitTs<60000?`<div class="row" style="justify-content:flex-end"><button class="txt" data-act="undoexit" data-t="${t.id}">↩ Отменить «Круг прошёл»</button></div>`:""}`:""}</div>`;
     const rem=remSec(t,e,now), arr=leftSh(t,e,now)<=0.5, col=(stopped||rem<900)?"var(--warn)":"var(--ok)", pr=Math.min(100,Math.max(0,(1-leftSh(t,e,now)/d.shelves)*100));
     return `<div class="test"><div class="bar"><i style="width:${pr}%;background:${arr?"var(--ok)":col}"></i></div><b style="font-size:18px">${esc(t.design)}</b>
     ${arr?`<div style="color:var(--ok);font-weight:700;font-size:18px">Полка с тестом на месте!</div>`:`<div class="stats"><div class="stat"><span>Остановка</span><b style="color:${col}">${stopped?"—":clock(now+rem*1000)}</b></div><div class="stat"><span>Осталось</span><b style="color:${col}">${fmtDur(rem)}</b></div><div class="stat"><span>Полка</span><b>${pad3(t.testShelf)}</b></div></div><div class="small">ещё ${Math.ceil(leftSh(t,e,now))} полок</div>`}
     ${t.author?`<div class="small">Поставил: ${esc(t.author)}</div>`:""}
-    ${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Круг прошёл</button>`:""}</div>`;
+    ${can?`<button class="ok" style="width:100%;margin-top:8px" data-act="done" data-t="${t.id}">Круг прошёл</button><div class="row" style="justify-content:flex-end"><button class="txt" style="${now-t.id<180000?"":"color:var(--tx2)"}" data-act="tcancel" data-t="${t.id}">${now-t.id<180000?"↩ Отменить тест":"Удалить тест"}</button></div>`:""}</div>`;
   }).join("");
   return `<div class="card ${stopped?"stop":""}">${stopped?`<div class="banner"><span>⏸ ЛИНИЯ СТОИТ</span><span>простой ${mmss((now-e.refTime)/1000)}</span></div>`:""}
   <div class="in"><div class="row"><h2>${d.name}</h2><span class="small">${feed.length?"← пресс "+feed.join(", ")+" · ":""}→ глазурь ${d.line}</span><span class="sp"></span>${e.fmt?`<span class="small">${fmtLabel(e.fmt)}</span>`:""}</div>
@@ -581,15 +601,17 @@ function evaCard(d){
   ${e.synced||!hasTest(d)?"":`<div class="small">Положение неизвестно: нажмите «Поправить полку»</div>`}
   ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
   <div class="row" style="margin-top:4px">${hasTest(d)?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}<button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
-  ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}`:""}
+  ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}
+  <div class="row" style="justify-content:flex-end"><button class="txt" style="color:var(--tx2)" data-act="power" data-d="${d.id}">⏻ Выключить Еву</button></div>`:""}
   <div style="margin-top:6px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
 }
 function dryHtml(){
   const col=d=>!evaActive(d)?"var(--tx2)":(evaOf(d).running?"var(--ok)":"var(--warn)");
   const chips=`<div class="chips"><button class="${evsel===0?"on":""}" data-act="evsel" data-k="0">Все</button>${DRYERS.map((d,i)=>`<button class="${evsel===i+1?"on":""}" data-act="evsel" data-k="${i+1}"><span class="dot" style="background:${col(d)}"></span><b>${i+1}</b></button>`).join("")}</div>`;
   let list;
-  if(evsel>0) list=evaCard(DRYERS[evsel-1]);
-  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(d=>`<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">тестов нет</span></div>`)].join("");
+  const slim=d=>{ const off=evaOf(d).off; return `<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">${off?"выключена":"тестов нет"}</span>${off&&canPress()?`<button class="txt" data-act="power" data-d="${d.id}">⏻ Включить</button>`:""}</div>`; };
+  if(evsel>0) list=evaOf(DRYERS[evsel-1]).off?slim(DRYERS[evsel-1]):evaCard(DRYERS[evsel-1]);
+  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(slim)].join("");
   return chips+list+(canPress()?`<button class="ok big" data-act="add">+ Тест</button>`:"");
 }
 /* --- Цех --- */
@@ -623,13 +645,13 @@ function schemeHtml(){
       nodes+=`<div class="nd" data-act="pinfo" data-k="${i}" style="left:0;top:${pTop[i]}px;width:${pW}px;height:${pH[i]}px;border-color:${led}">${pressSvg(p.state==="run",led)}<div class="tx"><b>ПРЕСС ${i}<span class="led" style="background:${led}"></span></b><div style="color:${led};font-weight:700">${p.eva?"→ Ева "+p.eva:"→ ?"}${p.state==="idle"?" · простой":""}</div><div>${p.fmt?fmtLabel(p.fmt):"формат ?"}${p.cpm>0?" "+trim(p.cpm)+"ц":""}</div><div style="color:${pr?"#dce6f2":"#8a9bb0"}">${pr?"P "+trim(p.pressure)+" бар":"P —"}</div></div></div>`; }
   }
   for(let k=1;k<=4;k++){
-    const d=DRYERS[k-1], e=evas[d.id], ee=e||evaDef(d), known=e&&e.synced, led=!known?LED.off:ee.running?LED.run:LED.idle;
+    const d=DRYERS[k-1], e=evas[d.id], ee=e||evaDef(d), known=e&&e.synced&&!e.off, led=!known?LED.off:ee.running?LED.run:LED.idle;
     const tt=tests.filter(t=>t.dryer===d.name&&!t.exitTs).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now))[0], waiting=tests.some(t=>t.dryer===d.name&&t.exitTs);
     nodes+=`<div class="nd" data-act="einfo" data-k="${k}" style="left:${eX}px;top:${eTop(k)}px;width:${eW}px;height:${eH}px;border:${known?"1.5px solid "+led:"1px solid #34465e"};border-radius:10px">${evaSvg(k,known&&ee.running,led)}<div class="tx"><b style="font-size:14px">ЕВА ${k}<span class="led" style="background:${led}"></span></b>
-    <div style="color:${led};font-weight:700">${!known?"нет данных":ee.running?"идёт":"СТОИТ "+mmss((now-ee.refTime)/1000)}</div>
+    <div style="color:${led};font-weight:700">${ee.off?"выключена":!known?"нет данных":ee.running?"идёт":"СТОИТ "+mmss((now-ee.refTime)/1000)}</div>
     ${known?`<div>${tt?`<span class="big3">${pad3(shelfNow(ee,now,d.shelves))}</span> `:""}<span style="color:#8a9bb0">${rateTxt(ee.rate)} яр/м</span></div>${tt&&ee.running?`<div style="color:#ffb020">${esc(tt.design)} стоп ${clock(now+remSec(tt,ee,now)*1000)}</div>`:waiting?`<div style="color:#64b5f6">тест ждёт глазурь</div>`:ee.fmt?`<div style="color:#8a9bb0">${fmtLabel(ee.fmt)}</div>`:""}`:`<div style="color:#8a9bb0">полка —</div>`}</div></div>`;
   }
-  return (canPress()?`<div class="row" style="margin-bottom:8px"><button data-act="params">⚙ Параметры прессов</button><button data-act="output">📦 Выпуск за смену</button></div>`:"")+
+  return (canPress()?`<div class="row" style="margin-bottom:8px"><button data-act="params">⚙ Параметры прессов</button><button data-act="output">📦 Обнулить пресса</button></div>`:"")+
   `<div class="panel"><div class="hd"><span>ЦЕХ · ПРЕССЫ → СУШИЛКИ</span><span style="color:#8a9bb0">${clock(now)}</span></div>
   <div class="lg"><span><span class="led" style="background:${LED.run}"></span>работа</span><span><span class="led" style="background:${LED.idle}"></span>простой/стоит</span><span><span class="led" style="background:${LED.off}"></span>выкл</span></div>
   <div class="sch" style="height:${total}px;width:${W}px"><svg class="pipes" width="${W}" height="${total}">${svg}</svg>${nodes}</div></div>
@@ -646,13 +668,13 @@ function pressInfo(i){
   ov.querySelector("#ed")?.addEventListener("click",()=>{ ov.remove(); dlgPress(i); });
 }
 function evaInfo(k){
-  const d=DRYERS[k-1], e=evas[d.id], ee=e||evaDef(d), known=e&&e.synced, now=Date.now();
+  const d=DRYERS[k-1], e=evas[d.id], ee=e||evaDef(d), known=e&&e.synced&&!e.off, now=Date.now();
   const ps=[1,2,3,4,5,6].filter(i=>pressOf(i).eva===k);
   const ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now));
   modal(`<span class="led" style="background:${!known?LED.off:ee.running?LED.run:LED.idle};width:12px;height:12px"></span> ${d.name}`,
-    irow("Состояние",!known?"нет данных":ee.running?"идёт":"СТОИТ, простой "+mmss((now-ee.refTime)/1000),known&&!ee.running?"var(--warn)":"")+
+    irow("Состояние",ee.off?"выключена":!known?"нет данных":ee.running?"идёт":"СТОИТ, простой "+mmss((now-ee.refTime)/1000),known&&!ee.running?"var(--warn)":"")+
     (hasTest(d)?irow("На загрузке",known?`полка ${pad3(shelfNow(ee,now,d.shelves))}`:"неизвестно"):"")+
-    (known?irow("Скорость",`${rateTxt(ee.rate)} пол/мин, круг ${fmtDur(d.shelves/ee.rate*60)}`)+(ee.fmt?irow("Формат",fmtLabel(ee.fmt)):""):"")+
+    (known?irow("Скорость",`${rateTxt(ee.rate)} пол/мин`)+irow("Круг",fmtDur(d.shelves/ee.rate*60))+(ee.fmt?irow("Формат",fmtLabel(ee.fmt)):""):"")+
     irow("Прессы",ps.length?ps.map(n=>{const p=pressOf(n); return `№${n}${p.state!=="run"?" ("+ST[p.state].toLowerCase()+")":""}${p.cpm>0?", "+trim(p.cpm)+" ц/мин":""}`;}).join("\n"):"не заданы")+
     `<h3 style="margin:12px 0 4px">${ts.length?"Тесты ("+ts.length+")":"Тестов нет"}</h3>`+ts.map(t=>`<div class="test"><b>${esc(t.design)}</b><div>${t.exitTs?`Полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}, ждёт глазурь ${fmtStop((now-t.exitTs)/1000)}`:!known?`Полка ${pad3(t.testShelf)}`:!ee.running?`Полка ${pad3(t.testShelf)}, линия стоит, осталось ${Math.ceil(leftSh(t,ee,now))} полок`:`Полка ${pad3(t.testShelf)}, остановка в ${clock(now+remSec(t,ee,now)*1000)}, через ${fmtDur(remSec(t,ee,now))}`}</div><div class="small">Поставил ${esc(t.author||"—")} в ${clock(t.id)}</div></div>`).join(""), null);
 }
@@ -793,11 +815,14 @@ document.addEventListener("click", e=>{
   else if(a==="toggle"){ el.disabled=true; doToggle(d); }
   else if(a==="speed") dlgSpeed(d);
   else if(a==="add") dlgAdd();
-  else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) modal(t.exitTs?"Тест вышел на глазурь?":"Круг прошёл?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>`, ()=>t.exitTs?doDone(t):doExit(t), t.exitTs?"Да, вышел на глазурь":"Да, круг прошёл"); }
+  else if(a==="done"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t){ const left=t.exitTs?0:remSec(t,evaOf(DRYERS.find(x=>x.name===t.dryer)),Date.now()); modal(t.exitTs?"Тест вышел на глазурь?":"Круг прошёл?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}</p>${left>600?`<p style="color:var(--warn);font-weight:700">По расчёту до конца круга ещё ${fmtDur(left)}. Точно круг прошёл?</p>`:""}`, ()=>t.exitTs?doDone(t):doExit(t), t.exitTs?"Да, вышел на глазурь":"Да, круг прошёл"); } }
   else if(a==="pinfo") pressInfo(+el.dataset.k);
   else if(a==="einfo") evaInfo(+el.dataset.k);
   else if(a==="params") dlgParams();
   else if(a==="output") dlgOutput();
+  else if(a==="power"){ const ev=evaOf(d), on=!!ev.off; modal(on?`Включить ${d.name}?`:`Выключить ${d.name}?`, `<p>${on?"Ева снова будет считаться. Проверьте скорость.":"Выключенная Ева серая, тесты на неё не ставятся, простой не считается."}</p>`, ()=>{ doPower(d,on); if(on) setTimeout(()=>dlgSpeed(d),0); }, on?"Включить":"Выключить"); }
+  else if(a==="tcancel"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t){ if(Date.now()-t.id<180000) cancelTest(t); else modal("Удалить тест?", `<p>${t.dryer}: ${esc(t.design)}, полка ${pad3(t.testShelf)}. Тест пропадёт у всех.</p>`, ()=>cancelTest(t), "Удалить"); } }
+  else if(a==="undoexit"){ const t=tests.find(x=>x.id===+el.dataset.t); if(t) undoExit(t); }
   else if(a==="accept"){ const m=journal.find(x=>x.id===el.dataset.m); if(m) doAccept(m); }
   else if(a==="brak") dlgBrak();
   else if(a==="accept_shift"){ ls("shift_"+user.uid,Date.now()); const s=sched(); log(nick+" принял смену"+(s&&s.mine?" ("+s.n+")":"")); render(); }
