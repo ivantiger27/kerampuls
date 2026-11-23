@@ -602,14 +602,14 @@ function evaCard(d){
   ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
   <div class="row" style="margin-top:4px">${hasTest(d)?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}<button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
   ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}
-  <div class="row" style="justify-content:flex-end"><button class="txt" style="color:var(--tx2)" data-act="power" data-d="${d.id}">🔌 Выключить Еву</button></div>`:""}
+  <div class="row" style="justify-content:flex-end"><button class="txt" style="color:var(--tx2)" data-act="power" data-d="${d.id}"><svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 6.5a8 8 0 1 0 10 0"/><path d="M12 3v8"/></svg>Выключить Еву</button></div>`:""}
   <div style="margin-top:6px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
 }
 function dryHtml(){
   const col=d=>!evaActive(d)?"var(--tx2)":(evaOf(d).running?"var(--ok)":"var(--warn)");
   const chips=`<div class="chips"><button class="${evsel===0?"on":""}" data-act="evsel" data-k="0">Все</button>${DRYERS.map((d,i)=>`<button class="${evsel===i+1?"on":""}" data-act="evsel" data-k="${i+1}"><span class="dot" style="background:${col(d)}"></span><b>${i+1}</b></button>`).join("")}</div>`;
   let list;
-  const slim=d=>{ const off=evaOf(d).off; return `<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">${off?"выключена":"тестов нет"}</span>${off&&canPress()?`<button class="txt" data-act="power" data-d="${d.id}">🔌 Включить</button>`:""}</div>`; };
+  const slim=d=>{ const off=evaOf(d).off; return `<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">выключена</span>${off&&canPress()?`<button class="txt" data-act="power" data-d="${d.id}"><svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 6.5a8 8 0 1 0 10 0"/><path d="M12 3v8"/></svg>Включить</button>`:""}</div>`; };
   if(evsel>0) list=evaOf(DRYERS[evsel-1]).off?slim(DRYERS[evsel-1]):evaCard(DRYERS[evsel-1]);
   else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(slim)].join("");
   return chips+list+(canPress()?`<button class="ok big" data-act="add">+ Тест</button>`:"");
