@@ -301,11 +301,12 @@ function doSpeed(d,rate,fmt,tpm){
   setDoc(doc(db,"evas",d.id), evaMap(rated(evaOf(d),rate,fmt,tpm,Date.now())));
   log(`${d.name}: скорость ${rateTxt(rate)} полок в минуту, круг ${fmtDur(d.shelves/rate*60)}${fmt?", формат "+fmtLabel(fmt):""} — ${nick}`);
 }
-function doAdd(d,name,shelf){
-  const now=Date.now(), old=evaOf(d), ne=evaSynced(old,shelf,d.shelves,now), b=writeBatch(db);
+function doAdd(d,name,shelf,loading){
+  const load=loading||shelf, dist=(((shelf-load)%d.shelves)+d.shelves)%d.shelves||d.shelves;
+  const now=Date.now(), old=evaOf(d), ne=evaSynced(old,load,d.shelves,now), b=writeBatch(db);
   b.set(doc(db,"evas",d.id), evaMap(ne));
-  tests.filter(t=>t.dryer===d.name).forEach(t=>b.set(doc(db,"tests",String(t.id)), testMap(retarget(t,old,ne,shelf,d.shelves,now))));
-  const nt={id:now, dryer:d.name, design:name, testShelf:shelf, target:ne.refPos+d.shelves, author:nick, exitTs:0};
+  tests.filter(t=>t.dryer===d.name).forEach(t=>b.set(doc(db,"tests",String(t.id)), testMap(retarget(t,old,ne,load,d.shelves,now))));
+  const nt={id:now, dryer:d.name, design:name, testShelf:shelf, target:ne.refPos+dist, author:nick, exitTs:0};
   b.set(doc(db,"tests",String(nt.id)), testMap(nt)); b.commit();
   log(`${d.name}: поставлен тест «${name}», полка ${pad3(shelf)} — ${nick}`);
 }
@@ -400,9 +401,12 @@ function dlgFix(d){
 }
 function dlgAdd(){
   modal("Новый тест", `<select id="d">${DRYERS.map((d,i)=>`<option value="${d.id}" ${evsel===i+1?"selected":""}>${d.name}</option>`).join("")}</select>
-  <input id="n" placeholder="Название теста (дизайн 001, брак…)"><input id="s" type="number" inputmode="numeric" placeholder="Полка, которая сейчас на загрузке">`, ov=>{
+  <input id="n" placeholder="Название теста (дизайн 001, брак…)"><input id="s" type="number" inputmode="numeric" placeholder="Полка с тестом">
+  <input id="l" type="number" inputmode="numeric" placeholder="Сейчас на загрузке (необязательно)">
+  <div class="small">Если тест грузят прямо сейчас, второе поле можно не заполнять. Если тест поставили раньше, впишите полку, которая сейчас на загрузке.</div>`, ov=>{
     const d=DRYERS.find(x=>x.id===ov.querySelector("#d").value), n=ov.querySelector("#n").value.trim(), s=parseInt(ov.querySelector("#s").value,10);
-    if(!n||!(s>=1&&s<=d.shelves)) return false; doAdd(d,n,s);
+    const lv=ov.querySelector("#l").value.trim(), l=lv?parseInt(lv,10):0;
+    if(!n||!(s>=1&&s<=d.shelves)||(lv&&!(l>=1&&l<=d.shelves))) return false; doAdd(d,n,s,l);
   }, "Поставить");
 }
 function dlgSpeed(d){
@@ -558,7 +562,8 @@ function brakBar(){
   return `<div class="bb" data-act="tab" data-k="jr"><div style="flex:1"><b>⚠ БРАК ждёт вас${p.length>1?" ("+p.length+")":""}</b><div style="font-size:12px">${esc(m.tag||"")} · ${esc(m.author||"")}, ${clock(m.ts)}</div></div><button data-act="accept" data-m="${m.id}">Принял</button></div>`;
 }
 /* --- Сушилки --- */
-const evaActive=d=>(evas[d.id]&&evas[d.id].synced)||tests.some(t=>t.dryer===d.name);
+const evaActive=d=>tests.some(t=>t.dryer===d.name)||(evas[d.id]&&evas[d.id].running===false)||[1,2,3,4,5,6].some(i=>{const p=pressOf(i);return p.eva===DRYERS.indexOf(d)+1&&p.state!=="off";});
+const hasTest=d=>tests.some(t=>t.dryer===d.name&&!t.exitTs);
 function evaCard(d){
   const e=evaOf(d), now=Date.now(), stopped=!e.running, can=canPress(), ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,e,now)-remSec(b,e,now));
   const feed=[1,2,3,4,5,6].filter(i=>pressOf(i).eva===DRYERS.indexOf(d)+1&&pressOf(i).state!=="off");
@@ -572,10 +577,10 @@ function evaCard(d){
   }).join("");
   return `<div class="card ${stopped?"stop":""}">${stopped?`<div class="banner"><span>⏸ ЛИНИЯ СТОИТ</span><span>простой ${mmss((now-e.refTime)/1000)}</span></div>`:""}
   <div class="in"><div class="row"><h2>${d.name}</h2><span class="small">${feed.length?"← пресс "+feed.join(", ")+" · ":""}→ глазурь ${d.line}</span><span class="sp"></span>${e.fmt?`<span class="small">${fmtLabel(e.fmt)}</span>`:""}</div>
-  <div class="stats"><div class="stat"><span>На загрузке</span><b>${e.synced?pad3(shelfNow(e,now,d.shelves)):"—"}</b></div><div class="stat"><span>Скорость</span><b>${rateTxt(e.rate)} пол/мин</b></div><div class="stat"><span>Круг</span><b>${fmtDur(d.shelves/e.rate*60)}</b></div></div>
-  ${e.synced?"":`<div class="small">Положение неизвестно: нажмите «Поправить полку»</div>`}
+  <div class="stats">${hasTest(d)?`<div class="stat"><span>На загрузке</span><b>${e.synced?pad3(shelfNow(e,now,d.shelves)):"—"}</b></div>`:""}<div class="stat"><span>Скорость</span><b>${rateTxt(e.rate)} пол/мин</b></div><div class="stat"><span>Круг</span><b>${fmtDur(d.shelves/e.rate*60)}</b></div></div>
+  ${e.synced||!hasTest(d)?"":`<div class="small">Положение неизвестно: нажмите «Поправить полку»</div>`}
   ${can?`${stopped?`<button class="ok big" data-act="toggle" data-d="${d.id}">▶ ЛИНИЯ ПОШЛА</button>`:""}
-  <div class="row" style="margin-top:4px"><button data-act="fix" data-d="${d.id}">Поправить полку</button><button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
+  <div class="row" style="margin-top:4px">${hasTest(d)?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}<button data-act="speed" data-d="${d.id}">⚙ Скорость</button></div>
   ${stopped?"":`<button class="warn" style="width:100%;margin-top:6px" data-act="toggle" data-d="${d.id}">⚠ Линия стоит</button>`}`:""}
   <div style="margin-top:6px">${ts.length?tr:`<div class="small">Тестов нет</div>`}</div></div></div>`;
 }
@@ -584,7 +589,7 @@ function dryHtml(){
   const chips=`<div class="chips"><button class="${evsel===0?"on":""}" data-act="evsel" data-k="0">Все</button>${DRYERS.map((d,i)=>`<button class="${evsel===i+1?"on":""}" data-act="evsel" data-k="${i+1}"><span class="dot" style="background:${col(d)}"></span><b>${i+1}</b></button>`).join("")}</div>`;
   let list;
   if(evsel>0) list=evaCard(DRYERS[evsel-1]);
-  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(d=>`<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">не запущена, нет данных</span>${canPress()?`<button data-act="fix" data-d="${d.id}">Поправить полку</button>`:""}</div>`)].join("");
+  else list=[...DRYERS.filter(evaActive).map(evaCard),...DRYERS.filter(d=>!evaActive(d)).map(d=>`<div class="card slim"><b>${d.name}</b><span class="small" style="flex:1">тестов нет</span></div>`)].join("");
   return chips+list+(canPress()?`<button class="ok big" data-act="add">+ Тест</button>`:"");
 }
 /* --- Цех --- */
@@ -622,7 +627,7 @@ function schemeHtml(){
     const tt=tests.filter(t=>t.dryer===d.name&&!t.exitTs).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now))[0], waiting=tests.some(t=>t.dryer===d.name&&t.exitTs);
     nodes+=`<div class="nd" data-act="einfo" data-k="${k}" style="left:${eX}px;top:${eTop(k)}px;width:${eW}px;height:${eH}px;border:${known?"1.5px solid "+led:"1px solid #34465e"};border-radius:10px">${evaSvg(k,known&&ee.running,led)}<div class="tx"><b style="font-size:14px">ЕВА ${k}<span class="led" style="background:${led}"></span></b>
     <div style="color:${led};font-weight:700">${!known?"нет данных":ee.running?"идёт":"СТОИТ "+mmss((now-ee.refTime)/1000)}</div>
-    ${known?`<div><span class="big3">${pad3(shelfNow(ee,now,d.shelves))}</span> <span style="color:#8a9bb0">${rateTxt(ee.rate)} яр/м</span></div>${tt&&ee.running?`<div style="color:#ffb020">${esc(tt.design)} стоп ${clock(now+remSec(tt,ee,now)*1000)}</div>`:waiting?`<div style="color:#64b5f6">тест ждёт глазурь</div>`:ee.fmt?`<div style="color:#8a9bb0">${fmtLabel(ee.fmt)}</div>`:""}`:`<div style="color:#8a9bb0">полка —</div>`}</div></div>`;
+    ${known?`<div>${tt?`<span class="big3">${pad3(shelfNow(ee,now,d.shelves))}</span> `:""}<span style="color:#8a9bb0">${rateTxt(ee.rate)} яр/м</span></div>${tt&&ee.running?`<div style="color:#ffb020">${esc(tt.design)} стоп ${clock(now+remSec(tt,ee,now)*1000)}</div>`:waiting?`<div style="color:#64b5f6">тест ждёт глазурь</div>`:ee.fmt?`<div style="color:#8a9bb0">${fmtLabel(ee.fmt)}</div>`:""}`:`<div style="color:#8a9bb0">полка —</div>`}</div></div>`;
   }
   return (canPress()?`<div class="row" style="margin-bottom:8px"><button data-act="params">⚙ Параметры прессов</button><button data-act="output">📦 Выпуск за смену</button></div>`:"")+
   `<div class="panel"><div class="hd"><span>ЦЕХ · ПРЕССЫ → СУШИЛКИ</span><span style="color:#8a9bb0">${clock(now)}</span></div>
@@ -646,7 +651,7 @@ function evaInfo(k){
   const ts=tests.filter(t=>t.dryer===d.name).sort((a,b)=>remSec(a,ee,now)-remSec(b,ee,now));
   modal(`<span class="led" style="background:${!known?LED.off:ee.running?LED.run:LED.idle};width:12px;height:12px"></span> ${d.name}`,
     irow("Состояние",!known?"нет данных":ee.running?"идёт":"СТОИТ, простой "+mmss((now-ee.refTime)/1000),known&&!ee.running?"var(--warn)":"")+
-    irow("На загрузке",known?`полка ${pad3(shelfNow(ee,now,d.shelves))}`:"неизвестно")+
+    (hasTest(d)?irow("На загрузке",known?`полка ${pad3(shelfNow(ee,now,d.shelves))}`:"неизвестно"):"")+
     (known?irow("Скорость",`${rateTxt(ee.rate)} пол/мин, круг ${fmtDur(d.shelves/ee.rate*60)}`)+(ee.fmt?irow("Формат",fmtLabel(ee.fmt)):""):"")+
     irow("Прессы",ps.length?ps.map(n=>{const p=pressOf(n); return `№${n}${p.state!=="run"?" ("+ST[p.state].toLowerCase()+")":""}${p.cpm>0?", "+trim(p.cpm)+" ц/мин":""}`;}).join("\n"):"не заданы")+
     `<h3 style="margin:12px 0 4px">${ts.length?"Тесты ("+ts.length+")":"Тестов нет"}</h3>`+ts.map(t=>`<div class="test"><b>${esc(t.design)}</b><div>${t.exitTs?`Полка ${pad3(t.testShelf)} вышла из Евы в ${clock(t.exitTs)}, ждёт глазурь ${fmtStop((now-t.exitTs)/1000)}`:!known?`Полка ${pad3(t.testShelf)}`:!ee.running?`Полка ${pad3(t.testShelf)}, линия стоит, осталось ${Math.ceil(leftSh(t,ee,now))} полок`:`Полка ${pad3(t.testShelf)}, остановка в ${clock(now+remSec(t,ee,now)*1000)}, через ${fmtDur(remSec(t,ee,now))}`}</div><div class="small">Поставил ${esc(t.author||"—")} в ${clock(t.id)}</div></div>`).join(""), null);
