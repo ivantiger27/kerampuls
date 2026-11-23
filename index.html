@@ -735,6 +735,29 @@ function casesHtml(){
     ${c.what?`<div class="small">Было: ${esc(c.what)}</div>`:""}<div>${esc(c.did)}</div>
     <div class="row"><span class="small" style="flex:1">${esc(c.nick)}, ${dayLabel(c.ts)} ${clock(c.ts)}</span>${c.uid===user.uid?`<button class="txt" style="color:var(--tx2)" data-act="case_del" data-k="${c.id}">Удалить</button>`:""}</div></div>`; }).join("")}`;
 }
+let aiUrl=null, aiList=[], aiDraft="";
+function aiHtml(){
+  if(aiUrl===null){ aiUrl=""; getDoc(doc(db,"config","app")).then(d=>{ aiUrl=(d.exists()&&d.data().aiUrl)||"-"; render(); }).catch(()=>{ aiUrl="-"; render(); }); }
+  const busy=aiList.some(a=>a.busy);
+  const top= !aiUrl?`<div class="small">Подключаюсь…</div>`: aiUrl==="-"?`<div class="small" style="color:var(--warn)">ИИ-помощник ещё не подключён: в базе нет адреса сервера (config/app → aiUrl).</div>`:
+    `<div class="small">${helpPress?"Пресс "+helpPress+": опишите проблему или номер аварии.":"Выберите пресс выше, так ответ будет точнее."}</div>
+    <div class="row"><textarea id="aiq" maxlength="600" placeholder="например: отслоения на 2-м штампе" style="flex:1;min-height:52px">${esc(aiDraft)}</textarea><button class="ok" data-act="ai_send" style="flex:none" ${busy?"disabled":""}>${busy?"…":"Спросить"}</button></div>`;
+  return top+aiList.map(a=>`<div class="al" style="cursor:default"><b>${a.press?"Пресс "+a.press+": ":""}${esc(a.q)}</b>
+    ${a.busy?`<div class="small">Думаю… (до минуты)</div>`:a.error?`<div style="color:var(--warn)">${esc(a.error)}</div>`:
+    `<div style="white-space:pre-line;margin-top:4px">${esc(a.answer.replace(/\*\*/g,""))}</div>${a.sources.length?`<div class="small" style="margin-top:6px;white-space:pre-line">Источники:\n${a.sources.map(esc).join("\n")}</div>`:""}`}</div>`).join("");
+}
+async function aiSend(){
+  const ta=document.getElementById("aiq"); const q=(ta?.value||"").trim(); if(!q||aiList.some(a=>a.busy)||!aiUrl||aiUrl==="-") return;
+  aiDraft=""; const item={q,press:helpPress,busy:true,answer:"",sources:[],error:""}; aiList.unshift(item); render();
+  try{
+    const token=await auth.currentUser.getIdToken();
+    const r=await fetch(aiUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token,q,press:helpPress})});
+    const j=await r.json().catch(()=>null);
+    if(r.ok&&j){ item.answer=j.answer||""; item.sources=(j.sources||[]).map(o=>`${o.id} — ${o.title} (${o.name})`); }
+    else item.error=(j&&j.error)||("Ошибка сервера ("+r.status+")");
+  }catch(e){ item.error="Нет связи с помощником"; }
+  item.busy=false; render();
+}
 function dlgCase(){
   let p=helpPress, st=0, df=helpDef, hp="";
   const chips=(g,arr,cur)=>`<div class="fm" data-g="${g}">${arr.map(([v,t])=>`<button data-v="${v}" class="${String(cur)===String(v)?"on":""}">${t}</button>`).join("")}</div>`;
@@ -795,9 +818,10 @@ function subFixes(code){
 }
 function helpHtml(){
   if(kb===null&&!kbState) setTimeout(loadKb,0);
-  const seg=`<div class="seg" style="margin:4px 0 6px">${["Аварии","Параметры","Брак у нас"].map((t,i)=>`<button class="${helpMode===i?"on":""}" data-act="hm" data-k="${i}">${t}</button>`).join("")}</div>`;
+  const seg=`<div class="seg" style="margin:4px 0 6px">${["Аварии","Параметры","Брак","ИИ"].map((t,i)=>`<button class="${helpMode===i?"on":""}" data-act="hm" data-k="${i}">${t}</button>`).join("")}</div>`;
   const pchips=`<div class="chips">${[0,1,2,3,4,5,6].map(i=>`<button class="${helpPress===i?"on":""}" data-act="hp" data-k="${i}">${i?"Пресс "+i:"Все"}</button>`).join("")}</div>`;
   if(helpMode===2) return seg+pchips+casesHtml();
+  if(helpMode===3) return seg+pchips+aiHtml();
   const found=helpFound(), pc=kb?kb.filter(a=>paramSources(0).includes(a.src)).length:0;
   const msg= (kbState==="loading"||!kbState)?"Загружаю справочник…": kbState==="empty"?"Справочник ещё не загружен: Профиль → «Загрузить справочник аварий» и выберите файл kb_alarms.json.":
     kbState==="error"?`Нет связи с базой. <button class="txt" data-act="kb_retry">Повторить</button>`:
@@ -841,6 +865,7 @@ function render(chatChanged){
 }
 
 /* ================= нажатия ================= */
+document.addEventListener("input", e=>{ if(e.target.id==="aiq") aiDraft=e.target.value; });
 document.addEventListener("click", e=>{
   const el=e.target.closest("[data-act]"); if(!el) return;
   const a=el.dataset.act, d=DRYERS.find(x=>x.id===el.dataset.d);
@@ -876,6 +901,7 @@ document.addEventListener("click", e=>{
   else if(a==="hm"){ helpMode=+el.dataset.k; helpOpen=null; render(); }
   else if(a==="hdef"){ helpDef=el.dataset.k; render(); }
   else if(a==="case_add") dlgCase();
+  else if(a==="ai_send") aiSend();
   else if(a==="case_del"){ const id=el.dataset.k; modal("Удалить запись?","",()=>{ deleteDoc(doc(db,"cases",id)); },"Удалить"); }
   else if(a==="kb_retry"){ kb=null; kbState=""; render(); }
   else if(a==="al"){ const k=el.dataset.k; helpOpen=helpOpen===k?null:k; subFixes(helpOpen?el.dataset.c:null); render(); }
