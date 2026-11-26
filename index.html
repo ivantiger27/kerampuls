@@ -205,18 +205,19 @@ const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localSt
 function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
 
 /* ================= смены (как в приложении) ================= */
-const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000;
+const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000, BR_OFFSETS=[1,3,0,-2];
 const shiftTs=()=>+ls("shift_"+user.uid)||0;
 const onShift=()=>shiftTs()>0&&Date.now()-shiftTs()<MAXSH;
 const brigade=()=>+ls("brigade")||0;
 function sched(){
   const b=brigade(); if(!b) return null;
   const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), day0=Math.floor(t.getTime()/86400000);
-  const isDay=h>=8&&h<20, sd=h<8?day0-1:day0, idx=((sd-ANCHOR+1-(b-1))%4+4)%4, mine=isDay?idx===0:idx===1;
-  return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+1-(b-1))%4+4)%4],mine:false};
+  const isDay=h>=8&&h<20, sd=h<8?day0-1:day0;
+  const idx=((sd-ANCHOR+BR_OFFSETS[b-1])%4+4)%4, mine=isDay?idx===0:idx===1;
+  return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+BR_OFFSETS[b-1])%4+4)%4],mine:false};
 }
-const endingStart=()=>{ const s=shiftStart(), n=Date.now(); return n-s<90*60000 ? s-12*3600000 : s; };
-const nearEnd=()=>{ const s=shiftStart(), n=Date.now(); return n-s<90*60000 || n>=s+12*3600000-90*60000; };
+const endingStart=()=>{ const s=shiftStart(), n=Date.now(); return n-s<20*60000 ? s-12*3600000 : s; };
+const nearEnd=()=>{ const s=shiftStart(), n=Date.now(); return n>=s+12*3600000-20*60000 };
 const zeroed=()=>[1,2,3,4,5,6].some(i=>(pressOf(i).outTs||0)>=endingStart());
 const shiftStart=()=>{ const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), d0=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); return (h<8?d0-4*3600000:h<20?d0+3*3600000:d0+15*3600000); };
 
@@ -483,7 +484,9 @@ function dlgOutput(after){
     const rows=[1,2,3,4,5,6].map(i=>[i,num(o.querySelector(`[data-i="${i}"]`).value)]).filter(r=>r[1]>0);
     if(!rows.length) return false;
     const now=Date.now(), b=writeBatch(db); rows.forEach(([i,m])=>b.set(doc(db,"presses","p"+i),{outM2:m,outTs:now},{merge:true})); b.commit(); if(after) setTimeout(after,0);
-    log(`Пресса обнулены (${brigade()?"смена "+brigade():nick}): `+rows.map(([i,m])=>`№${i} — ${trim(m)} м²`).join("; ")+`; всего ${trim(rows.reduce((s,r)=>s+r[1],0))} м² — ${nick}`);
+    const pressList=rows.map(([i,m])=>`  ✅ Пресс ${i}: ${trim(m)} м²`).join("\n");
+    const total=rows.reduce((s,r)=>s+r[1],0);
+    log(`🏭 Конец смены — ${brigade()?"смена "+brigade():nick}\n${pressList}\n  ════════════════════════\n  📊 ИТОГО: ${trim(total)} м² — ${nick}`);
   }, "Отправить");
   ov.querySelectorAll("[data-i]").forEach(x=>x.oninput=()=>{ let t=0; ov.querySelectorAll("[data-i]").forEach(y=>t+=num(y.value)); ov.querySelector("#tot").textContent="Всего: "+trim(t)+" м²"; });
 }
