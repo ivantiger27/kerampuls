@@ -206,6 +206,20 @@ function toast(t){ const d=document.createElement("div"); d.className="toast"; d
 
 /* ================= смены (как в приложении) ================= */
 const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000, BR_OFFSETS=[1,3,0,-2];
+const OFF_DUTY_PHRASES = [
+  "🚬 Пока не беспокоить", "🔧 Не допущен к подвигам", "🏭 Завод меня не заслужил",
+  "🫡 Боец пока в запасе", "⚙️ Шестерёнки отдыхают", "🧯 Пока ничего не горит",
+  "📦 Человек ещё на складе", "🚨 Работник отсутствует", "😎 Я сегодня не при делах",
+  "🍵 Начальство не вызывало", "🐌 Скорость пока нулевая", "💸 Зарплата себя не заработает",
+  "🤫 Меня тут нет", "🧠 Мозг на тех обслуживании"
+];
+const START_WORK_PHRASES = [
+  "☠️ Начать страдать", "🫡 Впрячься снова", "🔥 Погнали пахать", "🥲 Ну приехали",
+  "😈 Включить каторгу", "💸 За деньгами", "🏭 На галеры", "🐺 Выпустить зверя",
+  "⚙️ Завести работягу", "🍻 Принять судьбу", "🚀 В бой", "🫠 Конец отдыха",
+  "💪 Пора вкалывать", "😎 Выйти работать"
+];
+const randPhrase = arr => arr[Math.floor(Math.random() * arr.length)];
 const shiftTs=()=>+ls("shift_"+user.uid)||0;
 const onShift=()=>shiftTs()>0&&Date.now()-shiftTs()<MAXSH;
 const brigade=()=>+ls("brigade")||0;
@@ -575,7 +589,7 @@ function drawPend(){ const el=document.getElementById("cpend"); if(!el) return;
 function headerHtml(){
   let left;
   if(onShift()) left=`<div class="st-off"><div style="flex:1;min-width:0"><b style="color:var(--tx)"><span class="dotg"></span>${brigade()?"Смена "+brigade():"На смене"}</b><small>принята в ${clock(shiftTs())}</small></div><button data-act="handover" style="flex:none">Сдать смену</button></div>`;
-  else { const s=sched(); left=`<div class="st-off"><div style="flex:1;min-width:0"><b>Не на смене</b><small>${!s?"укажите смену в профиле":s.mine?"сейчас ваша: "+s.n:"сегодня: "+s.n}</small></div><button class="ok" data-act="accept_shift" style="flex:none">Принять смену</button></div>`; }
+  else { const s=sched(); const label = randPhrase(OFF_DUTY_PHRASES); left=`<div class="st-off"><div style="flex:1;min-width:0"><b>${label}</b><small>${!s?"укажите смену в профиле":s.mine?"сейчас ваша: "+s.n:"сегодня: "+s.n}</small></div><button class="ok" data-act="accept_shift" style="flex:none">${randPhrase(START_WORK_PHRASES)}</button></div>`; }
   return left+avatarHtml(user.uid,nick,40,'data-act="menu"');
 }
 const pendBrak=()=>journal.filter(m=>m.type==="brak"&&(m.to||[]).includes(role)&&Date.now()-m.ts<86400000&&!(accepts[m.id]||[]).some(a=>a.role===role));
