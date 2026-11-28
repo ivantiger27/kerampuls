@@ -205,7 +205,7 @@ const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localSt
 function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
 
 /* ================= смены (как в приложении) ================= */
-const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=14*3600000, BR_OFFSETS=[1,3,0,-2];
+const CYC=["День","Ночь","Отсыпной","Выходной"], ANCHOR=Date.UTC(2026,10,22)/86400000, MAXSH=12*3600000, BR_OFFSETS=[1,3,0,-2];
 const OFF_DUTY_PHRASES = [
   "🚬 Пока не беспокоить", "🔧 Не допущен к подвигам", "🏭 Завод меня не заслужил",
   "🫡 Боец пока в запасе", "⚙️ Шестерёнки отдыхают", "🧯 Пока ничего не горит",
@@ -231,7 +231,7 @@ function sched(){
   return mine?{n:CYC[idx],mine:true}:{n:CYC[((day0-ANCHOR+BR_OFFSETS[b-1])%4+4)%4],mine:false};
 }
 const endingStart=()=>{ const s=shiftStart(), n=Date.now(); return n-s<20*60000 ? s-12*3600000 : s; };
-const nearEnd=()=>{ const s=shiftStart(), n=Date.now(); return n>=s+12*3600000-20*60000 };
+const nearEnd=()=>{ const s=shiftStart(), n=Date.now(); return n>=s+10*3600000-20*60000 };
 const zeroed=()=>[1,2,3,4,5,6].some(i=>(pressOf(i).outTs||0)>=endingStart());
 const shiftStart=()=>{ const t=new Date(Date.now()+5*3600000), h=t.getUTCHours(), d0=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); return (h<8?d0-4*3600000:h<20?d0+3*3600000:d0+15*3600000); };
 
@@ -498,9 +498,9 @@ function dlgOutput(after){
     const rows=[1,2,3,4,5,6].map(i=>[i,num(o.querySelector(`[data-i="${i}"]`).value)]).filter(r=>r[1]>0);
     if(!rows.length) return false;
     const now=Date.now(), b=writeBatch(db); rows.forEach(([i,m])=>b.set(doc(db,"presses","p"+i),{outM2:m,outTs:now},{merge:true})); b.commit(); if(after) setTimeout(after,0);
-    const pressList=rows.map(([i,m])=>`  ✅ Пресс ${i}: ${trim(m)} м²`).join("\n");
+    const pressList=rows.map(([i,m])=>`  ✅ Пресс ${i}: ${trim(m)} м²`).join("\uE001");
     const total=rows.reduce((s,r)=>s+r[1],0);
-    log(`🏭 Конец смены — ${brigade()?"смена "+brigade():nick}\n${pressList}\n  ════════════════════════\n  📊 ИТОГО: ${trim(total)} м² — ${nick}`);
+    log(`📦 Обнуление прессов: ${brigade()?"смена "+brigade():nick}\uE001${pressList}\uE001  ════════════════════════\uE001  📊 ИТОГО: ${trim(total)} м²\uE001  👤 ${nick} | ${clock(now)}`);
   }, "Отправить");
   ov.querySelectorAll("[data-i]").forEach(x=>x.oninput=()=>{ let t=0; ov.querySelectorAll("[data-i]").forEach(y=>t+=num(y.value)); ov.querySelector("#tot").textContent="Всего: "+trim(t)+" м²"; });
 }
@@ -729,6 +729,12 @@ function journalHtml(){
     const dk=dayKey(m.ts); if(dk!==last){ out+=`<div class="day"><span>${dayLabel(m.ts)}</span></div>`; last=dk; }
     if(m.type==="lap") out+=`<div class="lap"><b class="t">${(m.text||"").startsWith("Вышел на глазурь")?"✅ ВЫШЕЛ НА ГЛАЗУРЬ":"🔄 КРУГ ПРОШЁЛ"}</b><div>${esc(m.text)}</div><div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
     else if(m.type==="brak") out+=brakCard(m,false);
+    else if((m.text||"").includes("Пресса обнулены")||(m.text||"").includes("Конец смены")||(m.text||"").includes("КОНЕЦ СМЕНЫ")){
+      const lines=(m.text||"").split("\uE001").filter(l=>l.trim());
+      out+=`<div class="lap" style="border-color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)"><b class="t" style="color:var(--warn)">📦 КОНЕЦ СМЕНЫ</b>`;
+      lines.forEach(l=>{ out+=`<div>${esc(l)}</div>`; });
+      out+=`<div class="small">${esc(m.author)} · ${clock(m.ts)}</div></div>`;
+    }
     else out+=`<div class="sys">${clock(m.ts)} · ${esc(m.text)}</div>`;
   }
   const pend=pendBrak();
